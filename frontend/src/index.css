@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=Inter:wght@400;500;600&display=swap');
+
+@import "tailwindcss";
+
+@config "../tailwind.config.js";
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Phần rãnh (Track) */
+::-webkit-scrollbar-track {
+  background: #090813; 
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    to bottom,
+    #090813 0%,
+    #ebe9ff 20%,
+    #090813 100%
+  );
+
+  border-radius: 5px;
+  border: 2px solid hsla(210, 100%, 56%, 0.15); /* same bg to make round */
+  transition: background 0.3s ease-in-out;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    to bottom,
+    #1e8fff6c 0%,
+    #ebe9ff 20%,
+    #1e8fff6c 100%
+  );
+}
+
+:root {
+  --color-1: #ffffff; 
+  --color-2: #8b5cf6; 
+  --color-3: #3b82f6; 
+  --color-4: #10b981; 
+}
+
+.effect.text {
+  opacity: 0; 
+  pointer-events: none;
+}
+.effect.text.active {
+  opacity: 1; 
+}
+

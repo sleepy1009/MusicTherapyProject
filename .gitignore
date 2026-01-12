@@ -1,0 +1,18 @@
+# --- Backend ---
+venv/
+__pycache__/
+*.py[cod]
+db.sqlite3
+.env
+backend/staticfiles/
+backend/media/
+
+# --- Frontend ---
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.env
+.DS_Store
+
+# --- Logs ---
+*.log
