@@ -11,10 +11,15 @@ export default {
         'out-text': ['Roboto Slab', 'serif'], // Font riêng cho Logo/Tiêu đề
       },
       colors: {
-        primary: '#4F46E5', 
-        secondary: '#10B981', 
+        main_text: '#F6F6F6',
+        main_background: '#212121',
+        primary: '#6D9886', // 6D9886
+        secondary: '#D9CAB3', 
       }
+
+      
     },
   },
   plugins: [],
 }
+

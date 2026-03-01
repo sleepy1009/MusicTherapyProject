@@ -165,9 +165,10 @@ const GooeyNav = ({
           .effect.filter::before {
             content: "";
             position: absolute;
-            inset: -75px;
+            inset: -50px;
             z-index: -2;
             background: black;
+            transform: scale(0.9);
           }
           .effect.filter::after {
             content: "";
@@ -178,14 +179,17 @@ const GooeyNav = ({
             opacity: 0;
             z-index: -1;
             border-radius: 9999px;
+            
           }
           .effect.active::after {
             animation: pill 0.3s ease both;
+            
           }
           @keyframes pill {
             to {
               transform: scale(1);
               opacity: 1;
+              
             }
           }
           .particle,
@@ -208,6 +212,7 @@ const GooeyNav = ({
             background: var(--color);
             opacity: 1;
             animation: point calc(var(--time)) ease 1 -350ms;
+            
           }
           @keyframes particle {
             0% {
@@ -267,12 +272,13 @@ const GooeyNav = ({
             content: "";
             position: absolute;
             inset: 0;
-            border-radius: 8px;
+            border-radius: 12px;
             background: white;
             opacity: 0;
             transform: scale(0);
             transition: all 0.3s ease;
             z-index: -1;
+            
           }
         `}
       </style>

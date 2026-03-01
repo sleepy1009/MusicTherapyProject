@@ -15,7 +15,7 @@ const Header = () => {
   return (
     <header className="fixed w-full  z-50 top-0 transition-all duration-300  backdrop-blur-xs border-b border-white/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-20 items-center">
+        <div className="flex justify-between h-16 items-center">
           
           {/* --- LEFT: LOGO --- */}
           <Link to="/" className="flex items-center gap-3 group">
@@ -23,7 +23,7 @@ const Header = () => {
                   <img src="/icon002.png" alt="Icon" className="w-12 h-12 shadow-[0px_-5px_10px_rgba(255,255,255,0.25)] rounded-full " />
             </div>
             <div className="flex flex-col">
-              <span className="font-out-text font-bold text-xl text-white tracking-wide">
+              <span className="font-out-text font-bold text-xl text-main_text tracking-wide">
                 MindMelody
               </span>
               <span className="text-[10px] text-gray-400 uppercase tracking-widest">
@@ -32,7 +32,7 @@ const Header = () => {
             </div>
 
             <button 
-                className="hidden md:flex items-center gap-2 text-rose-400 hover:text-rose-300 transition-colors text-sm font-medium px-3 py-1.5 rounded-full border border-rose-500/30 hover:bg-rose-500/10"
+                className="hidden md:flex items-center gap-2 text-rose-400 hover:text-rose-300 transition-colors text-sm font-medium px-3 py-1.5 rounded-full border border-rose-500/30 hover:bg-rose-500/10 cursor-pointer"
                 title="Hỗ trợ khẩn cấp"
             >
                 <Phone className="w-4 h-4" />
@@ -45,12 +45,12 @@ const Header = () => {
             
             {!isLoggedIn ? (
               <div className="flex items-center gap-4">
-                <button className="text-gray-300 hover:text-white font-medium text-sm transition-colors">
+                <button className="text-gray-300 hover:text-white font-medium text-sm transition-colors cursor-pointer">
                   Đăng nhập
                 </button>
                 <button 
                   onClick={() => setIsLoggedIn(true)} 
-                  className="bg-white text-black px-5 py-2.5 rounded-full font-bold text-sm hover:bg-gray-200 transition-all shadow-[0_0_15px_rgba(255,255,255,0.3)] flex items-center gap-2"
+                  className="bg-main_text text-black px-5 py-2.5 rounded-full font-bold text-sm hover:bg-gray-200 transition-all shadow-[0_0_15px_rgba(255,255,255,0.3)] flex items-center gap-2 cursor-pointer"
                 >
                   <LogIn className="w-4 h-4" />
                   Đăng ký

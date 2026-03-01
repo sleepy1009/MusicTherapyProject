@@ -22,16 +22,16 @@
   );
 
   border-radius: 5px;
-  border: 2px solid hsla(210, 100%, 56%, 0.15); /* same bg to make round */
+  border: 2px solid  #1eff9e6c 0% ; /* same bg to make round */
   transition: background 0.3s ease-in-out;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(
     to bottom,
-    #1e8fff6c 0%,
+    #18c57a6c 0%,
     #ebe9ff 20%,
-    #1e8fff6c 100%
+    #17bc5c6c 100%
   );
 }
 

@@ -8,7 +8,7 @@ const IntroView = ({ onComplete }) => {
   const [showButton, setShowButton] = useState(false);
 
   return (
-    <div className="flex flex-col items-center justify-center h-full px-8 text-center">
+    <div className="flex flex-col items-center justify-center h-full px-8 text-center bg-transparent">
       {/* Animation TextType */}
       <div className="text-2xl md:text-3xl font-light text-gray-200 leading-relaxed min-h-[120px]">
         <TextType
@@ -34,7 +34,7 @@ const IntroView = ({ onComplete }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           onClick={onComplete}
-          className="-mt-10 px-8 py-3 bg-white text-black font-bold rounded-full hover:scale-105 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+          className="-mt-10 px-8 py-3 bg-white text-black font-bold rounded-full hover:scale-105 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.3)] cursor-pointer"
         >
           Bắt đầu trả lời
         </motion.button>
