@@ -5,7 +5,10 @@ from django.contrib.auth.models import AbstractUser
 class User(AbstractUser):
     # username, password, email, first_name... already exis
     google_id = models.CharField(max_length=255, blank=True, null=True, unique=True)
-    avatar = models.URLField(max_length=500, blank=True, null=True)
+    avatar = models.CharField(max_length=500, blank=True, null=True)
+    display_name = models.CharField(max_length=255, blank=True, null=True)
+
+    age = models.IntegerField(null=True, blank=True)
     
     # JSONField to save hobby type ['pop', 'piano']
     music_preferences = models.JSONField(default=dict, blank=True)
@@ -100,3 +103,19 @@ class UserLog(models.Model):
     sentiment_score = models.FloatField(null=True, blank=True) # Điểm cảm xúc nếu có phân tích NLP
     
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class DiaryEntry(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='diary_entries')
+    title = models.CharField(max_length=255)
+    content = models.TextField()  # chứa mã HTML
+    theme = models.CharField(max_length=50, default='theme-default')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at'] # Sắp xếp bài mới nhất lên đầu
+
+    def __str__(self):
+        return f"{self.title} - {self.user.username}"

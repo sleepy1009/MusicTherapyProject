@@ -1,9 +1,15 @@
 import React from 'react';
 import { Facebook, Mail, Phone, MapPin, Github } from 'lucide-react'; 
+import { motion } from 'framer-motion';
 
 const Footer = () => {
   return (
-    <footer className="w-full relative z-20  pt-30 pb-10 bg-gradient-to-b from-transparent via-black/10 to-black text-gray-300 ">
+    <motion.footer 
+      initial={{ opacity: 0, y: 200, scale: 1  }} 
+      animate={{ opacity: 1, y: 0, scale: 1 }} 
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="w-full relative z-20  pt-30 pb-10 bg-gradient-to-b from-transparent via-black/10 to-black text-gray-300 "
+    >
       
       <div className="absolute left-1/2 -translate-x-1/2 -top-24 md:-top-44 pointer-events-none drop-shadow-[0_0_30px_rgba(255,255,255,0.6)]">
         <img src="/moon2.png" alt="Moon" className="w-48 md:w-190 opacity-90" aria-hidden="true" />
@@ -57,7 +63,7 @@ const Footer = () => {
           © 2025 MindMelody Project. All rights reserved.
         </div>
       </div>
-    </footer>
+    </motion.footer>
   );
 };
 

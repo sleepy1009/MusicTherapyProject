@@ -26,7 +26,7 @@ const HeroSection = ({ onStart }) => {
       className="relative w-full max-w-7xl bg-white/40000 border border-white/20 rounded-3xl p-8 md:p-12 overflow-hidden shadow-[0_0_50px_rgba(79,70,229,0.1)]"
       */}
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 20}}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
         className="relative w-full max-w-7xl max-h-[500px] border border-white/20 rounded-3xl  p-4 md:p-12  overflow-hidden "

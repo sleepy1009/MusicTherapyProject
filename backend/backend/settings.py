@@ -12,9 +12,10 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 import os
 from pathlib import Path
-from dotenv import load_dotenv # Import cái này
+from dotenv import load_dotenv
+from datetime import timedelta
 
-load_dotenv() # Load biến môi trường
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -43,9 +44,16 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
+    'rest_framework_simplejwt',
     'corsheaders',
     'api',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -129,10 +137,19 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-# Cho phép React (localhost:5173) gọi API
+# React (localhost:5173) gọi API
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
 
-# Chỉ định dùng Model User do mình tự viết (sẽ viết ở bước 4)
 AUTH_USER_MODEL = 'api.User'
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=7),  # change logicl later
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30), 
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
