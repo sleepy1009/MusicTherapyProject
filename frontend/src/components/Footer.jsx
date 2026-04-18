@@ -1,13 +1,22 @@
 import React from 'react';
 import { Facebook, Mail, Phone, MapPin, Github } from 'lucide-react'; 
 import { motion } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
+
 
 const Footer = () => {
+
+  const { pathname } = useLocation();
+  
+  const hideTextRoutes = ['/player', '/onboarding', '/profile'];
+  const hideText = hideTextRoutes.some(route => pathname.startsWith(route));
+
+
   return (
     <motion.footer 
       initial={{ opacity: 0, y: 200, scale: 1  }} 
       animate={{ opacity: 1, y: 0, scale: 1 }} 
-      transition={{ duration: 0.6, ease: "easeOut" }}
+      transition={{ duration: 2.6, ease: "easeOut" }}
       className="w-full relative z-20  pt-30 pb-10 bg-gradient-to-b from-transparent via-black/10 to-black text-gray-300 "
     >
       
@@ -15,7 +24,10 @@ const Footer = () => {
         <img src="/moon2.png" alt="Moon" className="w-48 md:w-190 opacity-90" aria-hidden="true" />
       </div>
 
-      <div className="container mx-auto px-12 relative z-10">
+      
+      <div className={`container mx-auto px-12 relative z-10 transition-opacity duration-300 ${
+        hideText ? 'opacity-0 pointer-events-none' : 'opacity-100'
+      }`}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center md:text-left">
           
           <div className="space-y-4">
@@ -56,15 +68,21 @@ const Footer = () => {
               </li>
             </ul>
           </div>
-
+          
         </div>
+        
+        
+      </div>
+      
 
-        <div className="mt-8 pt-8 border-t border-white/10 text-center text-xs opacity-50">
+      <div className="mt-8 pt-8 border-t border-white/10 text-center text-xs opacity-50">
           © 2025 MindMelody Project. All rights reserved.
         </div>
-      </div>
+      
     </motion.footer>
   );
 };
 
 export default Footer;
+
+

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, DiaryEntry
+from .models import User, DiaryEntry, DassResult
 
 # rules for info User (Onboarding(step 2 register)  Get Profile)
 class UserSerializer(serializers.ModelSerializer):
@@ -29,3 +29,11 @@ class DiaryEntrySerializer(serializers.ModelSerializer):
         model = DiaryEntry
         fields = ['id', 'title', 'content', 'theme', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class DassResultSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DassResult
+        fields = ['id', 'stress_score', 'anxiety_score', 'depression_score', 
+                  'stress_level', 'anxiety_level', 'depression_level', 'created_at']
+        read_only_fields = ['id', 'created_at']

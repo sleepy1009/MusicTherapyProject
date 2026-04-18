@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; 
+import { useLocation, useNavigate } from 'react-router-dom';
 import ParticlesBackground from '../components/reactbits/ParticlesBackground';
 import { AnimatePresence, motion } from 'framer-motion';
 import HeroSection from '../components/HeroSection';
@@ -6,6 +7,16 @@ import FocusOverlay from '../components/FocusOverlay';
 
 const Home = () => {
   const [isFocusMode, setIsFocusMode] = useState(false);
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+      if (location.state?.autoStartTherapy || location.state?.autoStartTest) {
+          setIsFocusMode(true); 
+          navigate(location.pathname, { replace: true, state: {} });
+      }
+  }, [location, navigate]);
   
   return (
     <div className="relative min-h-screen  overflow-hidden text-white flex flex-col justify-center">

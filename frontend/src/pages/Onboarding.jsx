@@ -4,18 +4,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { User, Calendar, Music, AlertOctagon, ArrowRight, ArrowLeft, CheckCircle2, Star } from 'lucide-react';
 import ParticlesBackground from '../components/reactbits/ParticlesBackground';
 
-const MUSIC_GENRES =[
-  { id: 'pop', label: 'Pop' },
-  { id: 'lofi', label: 'Lofi & Chill' },
-  { id: 'acoustic', label: 'Acoustic' },
-  { id: 'classical', label: 'Cổ điển' },
-  { id: 'piano', label: 'Piano Không Lời' },
-  { id: 'ambient', label: 'Ambient / Không gian' },
-  { id: 'edm', label: 'EDM / Dance' },
-  { id: 'rock', label: 'Rock' },
-  { id: 'rap', label: 'Rap / Hip-hop' },
-  { id: 'jazz', label: 'Jazz' },
-];
+const MUSIC_GENRES = {
+  'pop_group': 'Pop / Nhạc trẻ',
+  'kpop_group': 'K-Pop & J-Pop',
+  'lofi_group': 'Lofi & Chill',
+  'acoustic_group': 'Acoustic & Indie',
+  'rnb_group': 'R&B / Soul',
+  'hiphop_group': 'Hip-hop / Rap',
+  'piano_group': 'Piano / Không lời',
+  'classical_group': 'Cổ điển',
+  'edm_group': 'EDM / Dance',
+  'rock_group': 'Rock'
+};
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -241,17 +241,17 @@ const Onboarding = () => {
                   </div>
 
                   <div className="flex flex-wrap justify-center gap-3">
-                    {MUSIC_GENRES.map((genre) => {
-                      const isSelected = likedGenres.includes(genre.id);
+                    {Object.entries(MUSIC_GENRES).map(([id, label]) => {
+                      const isSelected = likedGenres.includes(id);
                       return (
                         <motion.button
-                          key={genre.id} onClick={() => handleToggleGenre(genre.id, 'like')}
+                          key={id} onClick={() => handleToggleGenre(id, 'like')}
                           whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                           className={`px-5 py-2.5 rounded-full border transition-all text-sm font-medium ${
                             isSelected ? 'bg-[#66D0BC] border-[#66D0BC] text-white shadow-[0_0_15px_rgba(65,166,126,0.4)]' : 'bg-white/60 border-white/40 text-gray-700 hover:bg-white/90'
                           }`}
                         >
-                          {genre.label}
+                          {label}
                         </motion.button>
                       )
                     })}
@@ -282,13 +282,13 @@ const Onboarding = () => {
                   </div>
 
                   <div className="flex flex-wrap justify-center gap-3">
-                    {MUSIC_GENRES.map((genre) => {
-                      const isSelected = dislikedGenres.includes(genre.id);
-                      const isDisabled = likedGenres.includes(genre.id); 
+                    {Object.entries(MUSIC_GENRES).map(([id, label]) => {
+                      const isSelected = dislikedGenres.includes(id);
+                      const isDisabled = likedGenres.includes(id);
 
                       return (
                         <motion.button
-                          key={genre.id} onClick={() => !isDisabled && handleToggleGenre(genre.id, 'dislike')}
+                          key={id} onClick={() => !isDisabled && handleToggleGenre(id, 'dislike')}
                           whileHover={!isDisabled ? { scale: 1.05 } : {}} whileTap={!isDisabled ? { scale: 0.95 } : {}}
                           className={`px-5 py-2.5 rounded-full border transition-all text-sm font-medium ${
                             isDisabled ? 'opacity-50 cursor-not-allowed bg-gray-200/50 border-gray-300/50 text-gray-400'
@@ -296,7 +296,7 @@ const Onboarding = () => {
                                 : 'bg-white/60 border-white/40 text-gray-700 hover:bg-white/90'
                           }`}
                         >
-                          {genre.label}
+                          {label}
                         </motion.button>
                       )
                     })}

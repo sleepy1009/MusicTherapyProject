@@ -3,9 +3,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { User, Calendar, Mail, Headphones, Music, AlertOctagon, Edit3, Shield, Check, X, Save, PersonStanding   } from 'lucide-react';
 
 const MUSIC_GENRES = {
-  'pop': 'Pop', 'lofi': 'Lofi & Chill', 'acoustic': 'Acoustic', 
-  'classical': 'Cổ điển', 'piano': 'Piano Không Lời', 'ambient': 'Ambient / Không gian',
-  'edm': 'EDM / Dance', 'rock': 'Rock', 'rap': 'Rap / Hip-hop', 'jazz': 'Jazz'
+  'pop_group': 'Pop / Nhạc trẻ',
+  'kpop_group': 'K-Pop & J-Pop',
+  'lofi_group': 'Lofi & Chill',
+  'acoustic_group': 'Acoustic & Indie',
+  'rnb_group': 'R&B / Soul',
+  'hiphop_group': 'Hip-hop / Rap',
+  'piano_group': 'Piano / Không lời',
+  'classical_group': 'Cổ điển',
+  'edm_group': 'EDM / Dance',
+  'rock_group': 'Rock'
 };
 
 const TabInfo = ({ userData, onEditAvatar, onSaveProfile }) => {
@@ -208,22 +215,28 @@ const TabInfo = ({ userData, onEditAvatar, onSaveProfile }) => {
                             <div>
                                 <p className="text-xs text-gray-400 mb-2.5 flex items-center gap-1.5"><Music className="w-3.5 h-3.5 text-[#41A67E]"/> Vùng an toàn (Yêu thích):</p>
                                 <div className="flex flex-wrap gap-2">
-                                    {formData.likedGenres.map(id => (
-                                        <span key={id} className="px-3 py-1.5 bg-[#41A67E]/20 border border-[#41A67E]/30 text-[#66D0BC] text-xs font-medium rounded-lg">
-                                            {MUSIC_GENRES[id]}
-                                        </span>
-                                    ))}
+                                    {formData.likedGenres.map(id => {
+                                        if (!MUSIC_GENRES[id]) return null; 
+                                        return (
+                                            <span key={id} className="px-3 py-1.5 bg-[#41A67E]/20 border border-[#41A67E]/30 text-[#66D0BC] text-xs font-medium rounded-lg">
+                                                {MUSIC_GENRES[id]}
+                                            </span>
+                                        );
+                                    })}
                                     {formData.likedGenres.length === 0 && <span className="text-xs text-gray-600 italic">Chưa thiết lập</span>}
                                 </div>
                             </div>
                             <div>
                                 <p className="text-xs text-gray-400 mb-2.5 flex items-center gap-1.5"><AlertOctagon className="w-3.5 h-3.5 text-rose-400"/> Cần tránh (Trigger):</p>
                                 <div className="flex flex-wrap gap-2">
-                                    {formData.dislikedGenres.map(id => (
-                                        <span key={id} className="px-3 py-1.5 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-medium rounded-lg">
-                                            {MUSIC_GENRES[id]}
-                                        </span>
-                                    ))}
+                                    {formData.dislikedGenres.map(id => {
+                                        if (!MUSIC_GENRES[id]) return null; 
+                                        return (
+                                            <span key={id} className="px-3 py-1.5 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-medium rounded-lg">
+                                                {MUSIC_GENRES[id]}
+                                            </span>
+                                        );
+                                    })}
                                     {formData.dislikedGenres.length === 0 && <span className="text-xs text-gray-600 italic">Không có</span>}
                                 </div>
                             </div>

@@ -5,28 +5,26 @@ import { Music, RefreshCw, PlayCircle } from 'lucide-react';
 const PlaylistDock = ({ selectedCards, isFinished, onRestart, onStartListening }) => {
   return (
     <motion.div 
-      // Layout Animation: Khi isFinished = true, nó bay ra giữa
       layout
       className={`
         bg-white/5 border border-white/20  rounded-3xl  p-2 flex flex-col
         transition-all duration-700 ease-in-out
         ${isFinished 
-            ? 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-md h-auto z-50 shadow-[0_0_100px_rgba(59,130,246,0.3)]' 
+            ? 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-md h-auto z-50 shadow-[0_0_60px_-4px_rgba(158,211,220,0.4)]' 
             : 'absolute top-44 left-6 md:left-3 w-56 h-auto min-h-[250px] z-40'
         }
       `}
     >
       <div className="flex items-center justify-between mb-4">
           <h3 className="text-white font-bold text-lg flex items-center gap-2">
-            <Music className="w-5 h-5 text-[#1E90FF]" />
+            <Music className="w-5 h-5 text-[#9ED3DC]" />
             {isFinished ? "Playlist Của Bạn" : "Đang Chọn..."}
           </h3>
           <span className="text-xs font-mono text-gray-400 bg-black/20 px-2 py-1 rounded">
-            {selectedCards.length} / 4
+            {selectedCards.length} / 7
           </span>
       </div>
 
-      {/* DANH SÁCH BÀI HÁT */}
       <div className="flex-1 space-y-3 overflow-y-auto custom-scrollbar max-h-[400px]">
         <AnimatePresence>
             {selectedCards.length === 0 && !isFinished && (
@@ -40,23 +38,20 @@ const PlaylistDock = ({ selectedCards, isFinished, onRestart, onStartListening }
 
             {selectedCards.map((card, index) => (
                 <motion.div
-                    key={card.id} // Dùng ID bài hát làm key
-                    layoutId={`card-${card.id}`} // Magic Key cho animation bay
+                    key={card.id} 
+                    layoutId={`card-${card.id}`} 
                     initial={{ opacity: 0, x: -20, scale: 0.8 }}
                     animate={{ opacity: 1, x: 0, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
                     className="flex items-center gap-3 bg-black/20 p-2 rounded-xl border border-white/5 group hover:bg-white/10 transition-colors"
                 >
-                    {/* Ảnh Album Art Vuông */}
                     <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 relative">
                         <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
-                        {/* Số thứ tự */}
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                             <span className="text-white font-bold text-xs">#{index + 1}</span>
                         </div>
                     </div>
                     
-                    {/* Thông tin */}
                     <div className="flex-1 min-w-0">
                         <h4 className="text-white text-sm font-medium truncate">{card.title}</h4>
                         <p className="text-gray-400 text-xs truncate">{card.artist}</p>
@@ -68,7 +63,6 @@ const PlaylistDock = ({ selectedCards, isFinished, onRestart, onStartListening }
         </AnimatePresence>
       </div>
 
-      {/* BUTTONS KHI HOÀN THÀNH */}
       {isFinished && (
          <motion.div 
             initial={{ opacity: 0, y: 10 }}
@@ -84,7 +78,7 @@ const PlaylistDock = ({ selectedCards, isFinished, onRestart, onStartListening }
              </button>
              <button 
                 onClick={onStartListening}
-                className="flex-[2] py-3 bg-[#1E90FF]/90 hover:bg-[#1E90FF] text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-500/30 transition flex items-center justify-center gap-2"
+                className="flex-[2] py-3 bg-[#9ED3DC]/80 hover:bg-[#9ED3DC]/90 text-white rounded-xl text-sm font-bold shadow-sm shadow-[#9ED3DC]/30 transition flex items-center justify-center gap-2"
              >
                 <PlayCircle className="w-5 h-5" /> Bắt đầu nghe
              </button>

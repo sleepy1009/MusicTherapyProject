@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, AlertCircle } from 'lucide-react'; 
@@ -6,33 +6,134 @@ import IntroView from './focus/IntroView';
 import ChatView from './focus/ChatView';
 import ResultView from './focus/ResultView';
 import Mascot from './Mascot';
-import CardSelectionView, { ISO_STEPS } from './focus/CardSelectionView'; 
+import CardSelectionView from './focus/CardSelectionView'; 
 import PlaylistDock from './focus/PlaylistDock';
+import CheckpointView from './focus/CheckpointView';
+
+const API = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 const FocusOverlay = ({ onClose }) => {
-  const [step, setStep] = useState('intro'); // intro -> chat -> result -> card-selection
+  const [step, setStep] = useState('checking'); // checking -> checkpoint -> intro -> chat -> result -> loading-music -> card-selection
   const [answers, setAnswers] = useState({});
   const [showConfirm, setShowConfirm] = useState(false); 
-
-  const [currentStep, setCurrentStep] = useState(0);
+  const [latestResult, setLatestResult] = useState(null);
+  
+  // DỮ LIỆU ĐỘNG TỪ API
+  const [dynamicIsoSteps, setDynamicIsoSteps] = useState([]); 
+  const [currentStep, setCurrentStep] = useState(0); // Từ 0 đến 6 (7 giai đoạn)
   const [selectedCards, setSelectedCards] = useState([]);
   const [displayedCards, setDisplayedCards] = useState([]);
   const [isSelectionFinished, setIsSelectionFinished] = useState(false);
 
+  const [latestPlaylist, setLatestPlaylist] = useState(null);
+
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    if (step === 'card-selection' && currentStep < ISO_STEPS.length) {
-       setDisplayedCards(ISO_STEPS[currentStep].cards.slice(0, 3));
-    }
-  }, [step, currentStep]);
+    const checkUserStatus = async () => {
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        if (!token) { 
+            setStep('intro'); 
+            return; 
+        }
+
+        try {
+            const dassRes = await fetch(`${API}/users/dass21/`, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (!dassRes.ok) {
+                setStep('intro');
+                return;
+            }
+            const dassData = await dassRes.json();
+
+            try {
+                const sessionRes = await fetch(`${API}/users/sessions/`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (sessionRes.ok) {
+                    const text = await sessionRes.text(); 
+                    const sessionData = text ? JSON.parse(text) : null;
+                    setLatestPlaylist(sessionData);
+                }
+            } catch (sessionErr) {
+                console.error("⚠️ Cảnh báo: Lỗi khi lấy Playlist cũ:", sessionErr);
+            }
+
+            if (location.state?.autoStartTherapy) {
+                setStep('auto-start-trigger'); 
+            } else if (location.state?.autoStartTest) {
+                setStep('chat'); 
+            } else if (dassData && dassData.length > 0) {
+                setLatestResult(dassData[0]);
+                setStep('checkpoint'); 
+            } else {
+                setStep('intro'); 
+            }
+
+        } catch (err) { 
+            console.error("LỖI (checkUserStatus):", err);
+            setStep('intro'); 
+        }
+    };
+    checkUserStatus();
+  }, []);
+
+  useEffect(() => {
+      if (step === 'auto-start-trigger') {
+          fetchTherapyMusic();
+      }
+  }, [step]);
+
+  const fetchTherapyMusic = async () => {
+      setStep('loading-music');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      try {
+          const res = await fetch(`${API}/users/therapy-playlist/`, { headers: { 'Authorization': `Bearer ${token}` } });
+          const data = await res.json();
+          
+          if (data.has_conflict) {
+              alert(data.conflict_message); 
+          }
+
+          const stepsFormat = [];
+          const phaseInfos = [
+              { desc: "Đồng điệu - Lắng nghe cảm xúc hiện tại của bạn.", color: "from-[#77B1D4] to-[#90D5FF]" },
+              { desc: "Đồng điệu - Thả lỏng và chấp nhận mọi suy nghĩ.", color: "from-[#77B1D4] to-[#90D5FF]" },
+              { desc: "Chuyển giao - Một chút nhịp điệu để xoa dịu.", color: "from-[#73abf5] to-[#6ba6ff]" },
+              { desc: "Chuyển giao - Từ từ chuyển hướng tâm trạng.", color: "from-[#73abf5] to-[#6ba6ff]" },
+              { desc: "Đích đến - Tìm lại sự bình yên trong tâm trí.", color: "from-[#FFB76C] to-[#FFF57E]" },
+              { desc: "Đích đến - Ánh sáng nhẹ nhàng và hy vọng.", color: "from-[#FFA4A4] to-[#FFBDBD]" },
+              { desc: "Đích đến - Chào đón nguồn năng lượng tích cực mới.", color: "from-[#FFA4A4] to-[#FFBDBD]" }
+          ];
+
+          for (let i = 1; i <= 7; i++) {
+              const allPhaseCards = data.recommended_tracks.filter(t => t.phase === i);
+              stepsFormat.push({
+                  id: i, title: `Giai đoạn ${i}`, desc: phaseInfos[i-1].desc, color: phaseInfos[i-1].color,
+                  allCards: allPhaseCards, 
+                  shuffleIndex: 0, 
+                  cards: allPhaseCards.slice(0, 3) 
+              });
+          }
+
+          setDynamicIsoSteps(stepsFormat);
+          setCurrentStep(0);
+          setDisplayedCards(stepsFormat[0].cards.slice(0, 3));
+          setStep('card-selection');
+      } catch (err) {
+          console.error(err);
+          alert("Lỗi khi tạo playlist!");
+          setStep('intro');
+      }
+  };
 
   const handleSelectCard = (card) => {
     const newSelection = [...selectedCards, card];
     setSelectedCards(newSelection);
 
-    if (currentStep < ISO_STEPS.length - 1) {
-      setTimeout(() => setCurrentStep(prev => prev + 1), 500);
+    if (currentStep < 6) { // 7 mốc -> index max = 6
+      setTimeout(() => {
+          setCurrentStep(prev => prev + 1);
+          setDisplayedCards(dynamicIsoSteps[currentStep + 1].cards.slice(0, 3));
+      }, 500);
     } else {
       setTimeout(() => setIsSelectionFinished(true), 500);
     }
@@ -40,189 +141,142 @@ const FocusOverlay = ({ onClose }) => {
 
   const handleBackCard = () => {
     if (currentStep > 0) {
-        setCurrentStep(prev => prev - 1);
-        setSelectedCards(prev => prev.slice(0, -1));
+        const prev = currentStep - 1;
+        setCurrentStep(prev);
+        setSelectedCards(selectedCards.slice(0, -1));
+        setDisplayedCards(dynamicIsoSteps[prev].cards.slice(0, 3));
     }
   };
 
   const handleShuffleCard = () => {
-      const shuffled = [...ISO_STEPS[currentStep].cards].sort(() => Math.random() - 0.5);
-      setDisplayedCards(shuffled.slice(0, 3));
+      setDynamicIsoSteps(prev => {
+          const newSteps = [...prev];
+          const stepData = newSteps[currentStep];
+          
+          const maxBatches = Math.floor(stepData.allCards.length / 3) || 1;
+          stepData.shuffleIndex = (stepData.shuffleIndex + 1) % maxBatches;
+          
+          const startIdx = stepData.shuffleIndex * 3;
+          stepData.cards = stepData.allCards.slice(startIdx, startIdx + 3);
+          
+          return newSteps;
+      });
+      
+      const stepData = dynamicIsoSteps[currentStep];
+      const startIdx = stepData.shuffleIndex * 3;
+      setDisplayedCards(stepData.allCards.slice(startIdx, startIdx + 3));
   };
 
   const handleRestartSelection = () => {
       setIsSelectionFinished(false);
-      setSelectedCards(prev => prev.slice(0, -1));
-      setCurrentStep(3); 
+      setSelectedCards([]);
+      setCurrentStep(0); 
+      setDisplayedCards(dynamicIsoSteps[0].cards.slice(0, 3));
   };
 
-  const handleChatFinish = (data) => {
-    setAnswers(data); 
-    setStep('result'); 
-  };
+  const handleStartListening = async () => {
+      setStep('loading-music'); 
+      
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  const handleLoginRequest = () => {
-    const confirm = window.confirm("Giả lập: Bạn muốn Đăng nhập (OK) hay Đăng ký (Cancel)?");
-    if(confirm) {
-        alert("Đăng nhập thành công! Chuyển sang chọn thẻ bài...");
-        setStep('card-selection'); 
-    }
-  };
-  
-  const handleGuestContinue = () => {
-     const confirm = window.confirm("Bạn sẽ tiếp tục với tư cách Khách. Kết quả sẽ không được lưu. Tiếp tục?");
-     if(confirm) {
-        setStep('card-selection');
-     }
-  };
+      let finalPlaylist = selectedCards;
 
-  const handleCloseRequest = () => {
-    if (step === 'intro' || step === 'result') {
+      try {
+          const ytRes = await fetch(`${API}/users/youtube-links/`, {
+              method: 'POST',
+              headers: headers,
+              body: JSON.stringify({ tracks: selectedCards })
+          });
+
+          if (ytRes.ok) {
+              const ytData = await ytRes.json();
+              finalPlaylist = ytData.enriched_tracks;
+          }
+
+          if (token) {
+              await fetch(`${API}/users/sessions/`, {
+                  method: 'POST',
+                  headers: headers,
+                  body: JSON.stringify({
+                      dass_result_id: latestResult?.id,
+                      tracks: finalPlaylist 
+                  })
+              });
+          }
+      } catch (error) {
+          console.error("Lỗi khi xử lý nhạc:", error);
+      }
+
       onClose();
-    } else {
-      setShowConfirm(true);
-    }
-  };
-
-  
-
-  const handleStartListening = () => {
-      onClose();
-      navigate('/player', { state: { playlist: selectedCards } });
+      navigate('/player', { state: { playlist: finalPlaylist } });
   };
 
   return (
     <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
       
-      <button 
-        onClick={handleCloseRequest}
-        className="absolute top-6 right-6 p-2 bg-white/10 rounded-full hover:bg-white/20 transition text-white z-50"
-      >
+      <button onClick={() => setShowConfirm(true)} className="absolute top-6 right-6 p-2 bg-white/10 rounded-full hover:bg-white/20 transition text-white z-50">
         <X className="w-6 h-6" />
       </button>
 
-          <AnimatePresence>
-                {showConfirm && (
-                    <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ type: "spring", stiffness: 120, damping: 20, mass: 1 }}
-                    className="absolute z-[60] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
-                                max-w-sm w-full text-center p-6 rounded-2xl
-                                bg-black/20 border border-xl backdrop-blur-lg"           
-                    >
-                    <div className="flex justify-center mb-4">
-                        <div className="inline-flex items-center justify-center w-12 h-12 mr-2 rounded-full bg-secondary/10 text-[#FFD45A]">
-                        <AlertCircle className="w-6 h-6" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-[#FFD45A] mt-2 mr-10"> Chú ý</h3>
-                    </div>
-                    <p className="text-l text-gray-200 mb-6">
-                        Kết quả của bạn sẽ không được lưu. Bạn có chắc muốn thoát không?
-                    </p>
+      <AnimatePresence>
+            {showConfirm && (
+                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
+                className="absolute z-[60] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-sm w-full text-center p-6 rounded-2xl bg-black/20 border border-white/20 backdrop-blur-xl">
+                    <h3 className="text-lg font-semibold text-[#FFD45A] mb-2 flex justify-center items-center gap-2"><AlertCircle /> Chú ý</h3>
+                    <p className="text-gray-200 mb-6">Bạn có chắc muốn thoát không? Quá trình sẽ bị hủy.</p>
                     <div className="flex gap-3 justify-center">
-                        <button
-                        onClick={() => setShowConfirm(false)}
-                        className="px-4 py-2 rounded-lg text-sm font-medium
-                                    bg-[#2E6F40]/40 border border-white/30 text-main_text
-                                    hover:bg-[#2E6F40]/96 transition focus:outline-none
-                                    focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2"
-                        >
-                        Tiếp tục làm
-                        </button>
-                        <button
-                        onClick={onClose}
-                        className="px-4 py-2 rounded-lg text-sm font-medium
-                                    bg-red-600/50 text-main_text/90 hover:bg-red-700 transition
-                                    focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 focus-visible:ring-offset-2"
-                        >
-                        Thoát luôn
-                        </button>
+                        <button onClick={() => setShowConfirm(false)} className="px-4 py-2 rounded-lg bg-[#2E6F40]/60 hover:bg-[#2E6F40] text-white transition">Tiếp tục làm</button>
+                        <button onClick={onClose} className="px-4 py-2 rounded-lg bg-red-600/60 hover:bg-red-600 text-white transition">Thoát luôn</button>
                     </div>
-                    </motion.div>
-                )}
-          </AnimatePresence>
+                </motion.div>
+            )}
+      </AnimatePresence>
 
-      {/* MASCOT */}
       <div className="absolute top-10 left-10 md:left-14 z-[60] w-32 h-32 pointer-events-none">
-        <Mascot 
-          status={step === 'loading' ? 'thinking' : 'listening'} 
-          className="w-full h-full" 
-        />
+        <Mascot status={step === 'loading-music' || step === 'checking' ? 'thinking' : 'listening'} className="w-full h-full" />
       </div>
 
       {(step === 'card-selection' || isSelectionFinished) && (
-          <PlaylistDock 
-            selectedCards={selectedCards} 
-            isFinished={isSelectionFinished} 
-            onRestart={handleRestartSelection}
-            onStartListening={handleStartListening}
-          />
+          <PlaylistDock selectedCards={selectedCards} isFinished={isSelectionFinished} onRestart={handleRestartSelection} onStartListening={handleStartListening}/>
       )}
 
-      {/* CONTAINER CHÍNH */}
       {!isSelectionFinished && (
-        <motion.div
-          layoutId="focus-container"
-          animate={{
-            borderColor: step === 'card-selection' ? 'rgba(255,255,255,0)' : 'rgba(255,255,255,0.2)',
-            borderWidth: step === 'card-selection' ? 0 : 1,
-            boxShadow: step === 'card-selection' 
-              ? '0 0 200px rgba(255, 255, 255, 0.15)' 
-              : '0 0 0px rgba(255, 255, 255, 0)',
-            backgroundColor: step === 'card-selection' ? 'rgba(255, 255, 255, 0)' : 'rgba(0,0,0,0.4)',
-          }}
-          transition={{ duration: 0.6, ease: 'easeInOut' }}
-          className="w-full max-w-5xl h-[80vh] border border-white/20 rounded-4xl overflow-hidden relative"
-        >
-        <div className="w-full h-full relative">
+        <motion.div layoutId="focus-container" className="w-full max-w-5xl h-[80vh] border border-white/20 rounded-[32px] overflow-hidden relative bg-black/40 backdrop-blur-md">
+            
+          {step === 'checking' && <div className="flex h-full items-center justify-center text-white"><span className="animate-pulse">Đang tải dữ liệu...</span></div>}
+          
+          {step === 'loading-music' && <div className="flex h-full flex-col items-center justify-center text-white"><Mascot status="thinking" className="w-32 h-32 mb-4"/><span className="animate-pulse text-xl font-bold">AI đang phân tích và tìm nhạc cho bạn...</span></div>}
 
-          {step === 'intro' && (
-             <div className="w-full h-full p-8 md:p-12 flex flex-col justify-center">
-                <IntroView onComplete={() => setStep('chat')} />
-             </div>
+          {step === 'checkpoint' && latestResult && (
+              <CheckpointView 
+                  latestResult={latestResult} 
+                  latestPlaylist={latestPlaylist}
+                  onUseOldResult={fetchTherapyMusic} 
+                  onTakeNewTest={() => setStep('intro')} 
+                  onPlayOldPlaylist={() => {
+                      onClose();
+                      navigate('/player', { state: { playlist: latestPlaylist.tracks } });
+                  }}
+              />
           )}
+          
+          {step === 'intro' && <div className="w-full h-full p-8 md:p-12 flex flex-col justify-center"><IntroView onComplete={() => setStep('chat')} /></div>}
 
-          {step === 'chat' && <ChatView onFinish={handleChatFinish} />}
+          {step === 'chat' && <ChatView onFinish={(data) => { setAnswers(data); setStep('result'); }} />}
 
           {step === 'result' && (
             <div className="w-full h-full overflow-y-auto custom-scrollbar p-4 md:p-8">
-               <ResultView 
-                answers={answers} 
-                onLoginRequest={handleLoginRequest}
-                onContinue={handleGuestContinue}
-              />
+               <ResultView answers={answers} onLoginRequest={() => { onClose(); navigate('/login'); }} onContinue={() => setStep('card-selection')} onSaveSuccess={fetchTherapyMusic}/>
             </div>
           )}
           
-          {step === 'card-selection' && (
-                <CardSelectionView 
-                    currentStep={currentStep}
-                    stepData={ISO_STEPS[currentStep]}
-                    displayedCards={displayedCards}
-                    handleSelectCard={handleSelectCard}
-                    handleBack={handleBackCard}
-                    handleShuffle={handleShuffleCard}
-                />
-            )}
-
-            
-
-          {step === 'player' && (
-            <div className="w-full h-full flex flex-col items-center justify-center text-white">
-                <h2 className="text-3xl font-bold mb-4">Giao diện Nghe nhạc</h2>
-                <p className="text-gray-400">Đang phát triển...</p>
-                <button onClick={() => setStep('card-selection')} className="mt-4 px-4 py-2 bg-white/10 rounded-lg">
-                    Quay lại test
-                </button>
-            </div>
+          {step === 'card-selection' && dynamicIsoSteps.length > 0 && (
+                <CardSelectionView currentStep={currentStep} stepData={dynamicIsoSteps[currentStep]} displayedCards={displayedCards} handleSelectCard={handleSelectCard} handleBack={handleBackCard} handleShuffle={handleShuffleCard}/>
           )}
 
-          
-
-        </div>
-      </motion.div>
+        </motion.div>
       )}
     </motion.div>
   );

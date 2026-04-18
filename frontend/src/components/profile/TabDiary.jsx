@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, Plus, Calendar, Edit3, Trash2, ArrowLeft, Save, Filter } from 'lucide-react';
 
@@ -35,6 +35,27 @@ const TabDiary = () => {
   const [filter, setFilter] = useState('all'); 
   const [currentEntry, setCurrentEntry] = useState(null);
   const API = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
+  const filteredEntries = useMemo(() => {
+      if (filter === 'all') return entries;
+
+      const now = new Date();
+      
+      return entries.filter(entry => {
+          const entryDate = new Date(entry.created_at || entry.date); 
+          
+          if (filter === 'week') {
+              const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+              return entryDate >= sevenDaysAgo && entryDate <= now;
+          }
+          
+          if (filter === 'month') {
+              return entryDate.getMonth() === now.getMonth() && entryDate.getFullYear() === now.getFullYear();
+          }
+          
+          return true;
+      });
+  }, [entries, filter]);
 
   const handleOpenCreate = () => {
     setCurrentEntry({
@@ -101,7 +122,7 @@ const TabDiary = () => {
         if (res.ok) {
             const savedEntry = await res.json();
             if (isNew) {
-                setEntries([savedEntry, ...entries]); // Thêm lên đầu
+                setEntries([savedEntry, ...entries]); 
             } else {
                 setEntries(entries.map(e => e.id === savedEntry.id ? savedEntry : e));
             }
@@ -178,6 +199,7 @@ const TabDiary = () => {
             </div>
 
             {entries.length === 0 ? (
+                // Trường hợp 1: Trắng tay hoàn toàn
                 <div className="flex-1 flex flex-col items-center justify-center py-20 text-center opacity-70">
                     <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4">
                         <Edit3 className="w-10 h-10 text-gray-400" />
@@ -185,9 +207,15 @@ const TabDiary = () => {
                     <p className="text-gray-300 font-medium">Bạn chưa có dòng nhật ký nào.</p>
                     <p className="text-sm text-gray-400 mt-1">Hãy bắt đầu ghi lại cảm xúc của ngày hôm nay nhé.</p>
                 </div>
+            ) : filteredEntries.length === 0 ? (
+                // Trường hợp 2: Có viết nhưng lọc không ra
+                <div className="flex-1 flex flex-col items-center justify-center py-20 text-center opacity-70">
+                    <p className="text-gray-300 font-medium">Không tìm thấy nhật ký nào trong thời gian này.</p>
+                </div>
             ) : (
+                // Trường hợp 3: Có dữ liệu đã lọc
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 overflow-y-auto custom-scrollbar pr-2 pb-10">
-                    {entries.map((entry) => (
+                    {filteredEntries.map((entry) => (
                         <motion.div 
                             key={entry.id} whileHover={{ y: -5 }} onClick={() => handleOpenEdit(entry)}
                             className="group relative h-48 rounded-2xl overflow-hidden cursor-pointer shadow-lg border border-white/10 hover:border-[#66D0BC]/50 transition-colors"
@@ -197,10 +225,9 @@ const TabDiary = () => {
                             
                             <div className="absolute inset-0 p-5 flex flex-col justify-end">
                                 <h3 className="text-lg font-bold text-white mb-1 line-clamp-1 group-hover:text-[#66D0BC] transition-colors">{entry.title}</h3>
-                                {/* dangerouslySetInnerHTML để render HTML thu gọn ngoài lưới */}
                                 <div className="text-xs text-gray-300 line-clamp-2 mb-3 prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: entry.content }}></div>
                                 <div className="flex items-center justify-between text-[10px] text-gray-400 font-medium">
-                                    <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(entry.created_at).toLocaleDateString('vi-VN')}</span>
+                                    <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(entry.created_at || entry.date).toLocaleDateString('vi-VN')}</span>
                                 </div>
                             </div>
 
@@ -291,7 +318,7 @@ const TabDiary = () => {
       <style dangerouslySetInnerHTML={{__html: `
         .custom-quill-container .ql-toolbar.ql-snow {
             border: none;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255, 23, 23, 0.1);
             padding: 10px 0;
             margin-bottom: 10px;
         }

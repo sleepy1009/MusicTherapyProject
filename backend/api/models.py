@@ -12,6 +12,8 @@ class User(AbstractUser):
     
     # JSONField to save hobby type ['pop', 'piano']
     music_preferences = models.JSONField(default=dict, blank=True)
+
+    liked_tracks = models.ManyToManyField('Track', related_name='liked_by', blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -44,13 +46,13 @@ class Track(models.Model):
     artist = models.CharField(max_length=255)
     album_cover = models.URLField(max_length=500, null=True, blank=True)
     
-    # Cache YouTube ID 
     youtube_id = models.CharField(max_length=50, null=True, blank=True)
+    duration = models.CharField(max_length=20, null=True, blank=True)
     
     # ISO Principle
-    valence = models.FloatField(help_text="Độ tích cực (0.0 - 1.0)")
-    energy = models.FloatField(help_text="Năng lượng (0.0 - 1.0)")
-    tempo = models.FloatField(help_text="Nhịp độ (BPM)")
+    valence = models.FloatField(default=0.5, help_text="Độ tích cực (0.0 - 1.0)")
+    energy = models.FloatField(default=0.5, help_text="Năng lượng (0.0 - 1.0)")
+    tempo = models.FloatField(default=100.0, help_text="Nhịp độ (BPM)")
     
     def __str__(self):
         return f"{self.title} - {self.artist}"
@@ -58,15 +60,28 @@ class Track(models.Model):
 # 4. PLAYLIST
 class ListeningSession(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    dass_result = models.ForeignKey(DassResult, on_delete=models.CASCADE, null=True, blank=True)
     
-    dass_result = models.ForeignKey(DassResult, on_delete=models.CASCADE)
-    
-    tracks = models.ManyToManyField(Track, related_name='sessions')
+    tracks = models.ManyToManyField(Track, through='SessionTrack', related_name='sessions')
     
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
         return f"Session {self.id} for {self.user.username}"
+
+class SessionTrack(models.Model):
+    session = models.ForeignKey(ListeningSession, on_delete=models.CASCADE)
+    track = models.ForeignKey(Track, on_delete=models.CASCADE)
+    
+    order_index = models.IntegerField() 
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order_index'] 
+        unique_together = ('session', 'track')
+
+    def __str__(self):
+        return f"[{self.order_index}] {self.track.title}"
 
 # 5. FEEDBACK
 class MusicFeedback(models.Model):
@@ -99,8 +114,8 @@ class UserLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     log_type = models.CharField(max_length=20, choices=LogType.choices)
     
-    content = models.TextField(blank=True, null=True) # Nội dung chat/nhật ký
-    sentiment_score = models.FloatField(null=True, blank=True) # Điểm cảm xúc nếu có phân tích NLP
+    content = models.TextField(blank=True, null=True) 
+    sentiment_score = models.FloatField(null=True, blank=True) 
     
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -108,14 +123,31 @@ class UserLog(models.Model):
 class DiaryEntry(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='diary_entries')
     title = models.CharField(max_length=255)
-    content = models.TextField()  # chứa mã HTML
+    content = models.TextField()
     theme = models.CharField(max_length=50, default='theme-default')
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-created_at'] # Sắp xếp bài mới nhất lên đầu
+        ordering = ['-created_at']
 
     def __str__(self):
         return f"{self.title} - {self.user.username}"
+    
+class SpotifyTrack(models.Model):
+    track_id = models.CharField(max_length=50, primary_key=True)
+    track_name = models.CharField(max_length=255)
+    artists = models.CharField(max_length=255)
+    album_name = models.CharField(max_length=255, blank=True, null=True)
+    genre = models.CharField(max_length=100)
+    popularity = models.IntegerField()
+    
+    valence = models.FloatField()
+    energy = models.FloatField()
+    tempo = models.FloatField()
+    acousticness = models.FloatField()
+    instrumentalness = models.FloatField()
+
+    def __str__(self):
+        return f"{self.track_name} - {self.artists}"

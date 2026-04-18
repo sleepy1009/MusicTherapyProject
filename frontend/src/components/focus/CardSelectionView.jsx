@@ -4,64 +4,8 @@ import { ArrowLeft, RefreshCw, Shuffle } from 'lucide-react';
 import DecayCard from '../reactbits/DecayCard';
 import PlaylistDock from './PlaylistDock';
 
-// DỮ LIỆU GIẢ LẬP (SAU NÀY SẼ LẤY TỪ API BACKEND DỰA TRÊN SỞ THÍCH)
-export const ISO_STEPS = [
-  {
-    id: 1,
-    title: "",
-    desc: "Hãy chọn bài hát phản ánh đúng nhất nỗi lòng hiện tại của bạn.",
-    color: "from-[#77B1D4] to-[#90D5FF]",
-    cards: [
-      { id: '1a', title: "Midnight Rain", artist: "Taylor Swift", image: "https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=800&auto=format&fit=crop",duration: "2:54",previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
-      { id: '1b', title: "Glimpse of Us", artist: "Joji", image: "https://images.unsplash.com/photo-1516528387618-afa90b13e000?q=80&w=800&auto=format&fit=crop",duration: "2:54",previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
-      { id: '1c', title: "Someone Like You", artist: "Adele", image: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?q=80&w=800&auto=format&fit=crop",duration: "2:54",previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" }
-    ]
-  },
-  {
-    id: 2,
-    title: "",
-    desc: "Một chút nhịp điệu để xoa dịu và chuyển hướng tâm trạng.",
-    color: "from-[#73abf5] to-[#6ba6ff]",
-    cards: [
-      { id: '2a', title: "Save Your Tears", artist: "The Weeknd", image: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=800&auto=format&fit=crop",duration: "2:54",previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
-      { id: '2b', title: "Cold Heart", artist: "Elton John", image: "https://images.unsplash.com/photo-1494232410401-ad00d5433cfa?q=80&w=800&auto=format&fit=crop",duration: "2:54",previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
-      { id: '2c', title: "Stay", artist: "Justin Bieber", image: "https://images.unsplash.com/photo-1619983081563-430f63602796?q=80&w=800&auto=format&fit=crop",duration: "2:54",previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" }
-    ]
-  },
-  {
-    id: 3,
-    title: "",
-    desc: "Tìm lại sự bình yên và ánh sáng nhẹ nhàng.",
-    color: "from-[#FFB76C] to-[#FFF57E]",
-    cards: [
-      { id: '3a', title: "Flowers", artist: "Miley Cyrus", image: "https://images.unsplash.com/photo-1490750967868-58cb75065ed4?q=80&w=800&auto=format&fit=crop",duration: "2:54",previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
-      { id: '3b', title: "As It Was", artist: "Harry Styles", image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop",duration: "2:54",previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
-      { id: '3c', title: "Cruel Summer", artist: "Taylor Swift", image: "https://images.unsplash.com/photo-1500462918059-b1a0cb512f1d?q=80&w=800&auto=format&fit=crop",duration: "2:54",previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" }
-    ]
-  },
-  {
-    id: 4,
-    title: "",
-    desc: "Chào đón nguồn năng lượng tích cực mới.",
-    color: "from-[#FFA4A4] to-[#FFBDBD]",
-    cards: [
-      { id: '4a', title: "Happy", artist: "Pharrell Williams", image: "https://images.unsplash.com/photo-1459749411177-287ce35e8b4f?q=80&w=800&auto=format&fit=crop",duration: "2:54",previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
-      { id: '4b', title: "Can't Stop", artist: "Justin Timberlake", image: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=800&auto=format&fit=crop",duration: "2:54",previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
-      { id: '4c', title: "Uptown Funk", artist: "Bruno Mars", image: "https://images.unsplash.com/photo-1533174072545-e8d4aa97edf9?q=80&w=800&auto=format&fit=crop",duration: "2:54",previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" }
-    ]
-  }
-];
 
-const CardSelectionView = ({ 
-  currentStep, 
-  handleSelectCard, 
-  handleBack, 
-  handleShuffle, 
-  displayedCards,
-  stepData
-}) => {
-  
-  // Component này giờ chỉ lo hiển thị UI bên trong cái hộp tím
+const CardSelectionView = ({ currentStep, handleSelectCard, handleBack, handleShuffle, displayedCards, stepData }) => {
   return (
     <div className="w-full h-full flex flex-col items-center justify-center relative overflow-hidden">
       

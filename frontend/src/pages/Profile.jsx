@@ -39,7 +39,7 @@ const Profile = () => {
     { id: 'info', icon: User, label: 'Thông tin cá nhân' },
     { id: 'stats', icon: BarChart2, label: 'Thống kê & Biểu đồ' },
     { id: 'diary', icon: BookOpen, label: 'Nhật ký cảm xúc' },
-    { id: 'therapy', icon: Headphones, label: 'Góc Nghe Nhạc (Therapy)' },
+    { id: 'therapy', icon: Headphones, label: 'Góc Nghe Nhạc' },
   ];
 
   useEffect(() => {

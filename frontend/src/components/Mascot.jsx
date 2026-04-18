@@ -2,10 +2,12 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 const MASCOT_STATES = {
-  idle: "/mascot/d.gif", 
-  listening: "/mascot/d.gif", 
-  thinking: "/mascot/d.gif", 
-  happy: "/mascot/d.gif"
+  idle: "/mascot/robot-idle.gif", 
+  listening: "/mascot/robot-idle.gif", 
+  thinking: "/mascot/robot-idle.gif", 
+  happy: "/mascot/robot-idle.gif", //d.gif
+  run: "/mascot/robot-run.gif",
+  idle2: "/mascot/robot-idle2.gif", 
 };
 
 const Mascot = ({ status = 'idle', className = '' }) => {
