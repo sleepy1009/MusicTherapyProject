@@ -19,7 +19,7 @@ const PlaylistSidebar = () => {
                 
                 const dynamicStyle = isActive ? {
                     backgroundColor: `${activeColor}22`, 
-                    borderColor: `${activeColor}66`,    
+                    borderColor: activeColor,
                     boxShadow: `0 4px 15px ${activeColor}11`
                 } : {};
 
@@ -45,10 +45,10 @@ const PlaylistSidebar = () => {
                         </div>
                         
                         <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-bold truncate ${isActive ? 'text-white' : 'text-gray-300'}`}>
+                            <p className={`text-sm font-bold truncate ${isActive ? 'text-main_text' : 'text-main_text/60'}`}>
                                 {song.title}
                             </p>
-                            <p className="text-xs text-gray-400 truncate">
+                            <p className={`text-xs truncate ${isActive ? 'text-main_text/60' : 'text-main_text/40'}`}>
                                 {song.artist}
                             </p>
 

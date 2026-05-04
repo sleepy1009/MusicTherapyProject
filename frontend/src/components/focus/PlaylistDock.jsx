@@ -77,7 +77,7 @@ const PlaylistDock = ({ selectedCards, isFinished, onRestart, onStartListening }
                 <RefreshCw className="w-4 h-4" /> Tạo lại
              </button>
              <button 
-                onClick={onStartListening}
+                onClick={() => onStartListening()}
                 className="flex-[2] py-3 bg-[#9ED3DC]/80 hover:bg-[#9ED3DC]/90 text-white rounded-xl text-sm font-bold shadow-sm shadow-[#9ED3DC]/30 transition flex items-center justify-center gap-2"
              >
                 <PlayCircle className="w-5 h-5" /> Bắt đầu nghe

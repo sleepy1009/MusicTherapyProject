@@ -1,7 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Heart, Shuffle, Repeat, Repeat1 } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Heart, Shuffle, Repeat, Repeat1, PictureInPicture } from 'lucide-react';
 import { usePlayer } from './PlayerContext';
+import { useToast } from '../ToastContext';
+
 
 const formatTime = (time) => {
     if (isNaN(time)) return "0:00";
@@ -9,6 +11,7 @@ const formatTime = (time) => {
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 };
+
 
 // Repeat mode: 'off' -> 'all' -> 'one'
 const REPEAT_MODES = ['off', 'all', 'one'];
@@ -20,13 +23,15 @@ const MediaController = () => {
         togglePlay, handleNext, handlePrev, toggleMute, handleToggleLike, mode 
     } = usePlayer();
 
+    const toast = useToast();
+
+
     const [isIdle, setIsIdle] = useState(false);
     const [isShuffle, setIsShuffle] = useState(false);
     const [repeatMode, setRepeatMode] = useState('off'); // 'off' | 'all' | 'one'
     const progressBarRef = useRef(null);
     const volumeBarRef = useRef(null);
 
-    // Tự động ẩn bar sau 3s không di chuột
     useEffect(() => {
         let timeout;
         const handleMouseMove = () => {
@@ -43,6 +48,7 @@ const MediaController = () => {
         const rect = progressBarRef.current.getBoundingClientRect();
         const newTime = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * duration;
         playerTarget.seekTo(newTime);
+        toast.info("Để âm nhạc phát huy tối đa tác dụng trị liệu, bạn nên nghe tuần tự nhé.");
     };
 
     const handleVolumeChange = (e) => {
@@ -50,9 +56,25 @@ const MediaController = () => {
         const rect = volumeBarRef.current.getBoundingClientRect();
         const newVolume = Math.round(Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * 100);
         setVolume(newVolume);
-        localStorage.setItem('playerVolume', newVolume); // LƯU LẠI ÂM LƯỢNG VÀO TRÌNH DUYỆT
+        localStorage.setItem('playerVolume', newVolume); 
         playerTarget.setVolume(newVolume);
         if (newVolume > 0) setIsMuted(false);
+    };
+
+    const handleTogglePiP = async () => {
+        const videoElement = document.getElementById('pip-dummy-video');
+        if (!videoElement) return;
+
+        try {
+            if (document.pictureInPictureElement) {
+                await document.exitPictureInPicture();
+            } else {
+                await videoElement.requestPictureInPicture();
+            }
+        } catch (error) {
+            console.error("Lỗi khi mở Mini Player:", error);
+            alert("Trình duyệt của bạn không hỗ trợ hoặc đang chặn tính năng Picture-in-Picture.");
+        }
     };
 
     const cycleRepeat = () => {
@@ -220,7 +242,17 @@ const MediaController = () => {
 
                 <div className="w-px h-5 bg-white/15 mx-1 flex-shrink-0" />
 
-                <span className="text-[11px] text-gray-500 font-mono whitespace-nowrap">
+                    <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={handleTogglePiP}
+                    className="text-gray-400 hover:text-[#9ED3DC] transition-colors"
+                    title="Mở Mini Player"
+                >
+                    <PictureInPicture className="w-4 h-4" />
+                </motion.button>
+
+                <span className="text-[11px] text-gray-500 font-mono whitespace-nowrap ml-2">
                     {currentIndex + 1} / {playlistData.length}
                 </span>
             </div>

@@ -4,6 +4,8 @@ import { BookOpen, Plus, Calendar, Edit3, Trash2, ArrowLeft, Save, X } from 'luc
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { usePlayer } from './PlayerContext';
+import { useToast } from '../ToastContext';
+
 
 const DIARY_THEMES = [
   { id: 'theme-default', name: 'Mặc định', image: '/images/p0.png' },
@@ -23,6 +25,9 @@ const DiaryPanel = () => {
     diaryEntries, setDiaryEntries, fetchDiary
   } = usePlayer();
 
+  const toast = useToast();
+  
+
   const getThemeImage = (themeId) => {
     const theme = DIARY_THEMES.find(t => t.id === themeId);
     return theme ? theme.image : DIARY_THEMES[0].image;
@@ -34,7 +39,7 @@ const DiaryPanel = () => {
   };
 
   const handleSave = async () => {
-    if (!currentDiaryEntry.title.trim()) return alert("Vui lòng nhập tiêu đề!");
+    if (!currentDiaryEntry.title.trim()) return toast.warning("Bạn chưa đặt tiêu đề cho nhật ký kìa.");
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const isNew = currentDiaryEntry.id === null;
     const url = isNew ? `${API}/users/diary/` : `${API}/users/diary/${currentDiaryEntry.id}/`;
@@ -47,6 +52,7 @@ const DiaryPanel = () => {
       });
       if (res.ok) {
         fetchDiary();
+        toast.success("Đã lưu nhật ký thành công.");
         setDiaryViewMode('list');
       }
     } catch (err) { console.error(err); }

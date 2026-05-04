@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Plus, Calendar, Edit3, Trash2, ArrowLeft, Save, Filter } from 'lucide-react';
-
+import { BookOpen, Plus, Calendar, Edit3, Trash2, ArrowLeft, Save } from 'lucide-react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
+import { useToast } from '../ToastContext';
+import { useConfirm } from '../ConfirmContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'; 
 
 //all const here is fake data, use real later Fate/strange fake!
 const DIARY_THEMES =[
@@ -31,10 +33,83 @@ const modules = {
 
 const TabDiary = () => {
   const [viewMode, setViewMode] = useState('list');
-  const [entries, setEntries] = useState([]);
   const [filter, setFilter] = useState('all'); 
   const [currentEntry, setCurrentEntry] = useState(null);
+  
   const API = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const toast = useToast();
+  const { confirm } = useConfirm();
+  const queryClient = useQueryClient(); 
+
+  //FETCH DATA 
+  const { data: entries = [], isLoading } = useQuery({
+    queryKey: ['diaryEntries'],
+    queryFn: async () => {
+      const res = await fetch(`${API}/users/diary/`, { headers: { 'Authorization': `Bearer ${token}` } });
+      if (!res.ok) throw new Error('Network response was not ok');
+      return res.json();
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id) => {
+        const res = await fetch(`${API}/users/diary/${id}/`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Lỗi từ server");
+    },
+    onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['diaryEntries'] });
+        toast.success("Đã xóa trang nhật ký.");
+        if (viewMode === 'write') setViewMode('list');
+    }
+  });
+
+  const handleDelete = async (id, e) => {
+    if(e) e.stopPropagation(); 
+    const isConfirmed = await confirm({
+        title: "Xóa trang nhật ký?",
+        message: "Trang nhật ký này sẽ bị xóa vĩnh viễn và không thể khôi phục. Bạn có chắc chắn không?",
+        confirmText: "Xóa luôn", cancelText: "Giữ lại", type: "danger" 
+    });
+    if (!isConfirmed) return;
+    
+    deleteMutation.mutate(id);
+  };
+
+  const saveMutation = useMutation({
+      mutationFn: async (entryData) => {
+        const isNew = currentEntry.id === null;
+        const url = isNew ? `${API}/users/diary/` : `${API}/users/diary/${currentEntry.id}/`;
+        const method = isNew ? 'POST' : 'PATCH';
+        const res = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(entryData)
+        });
+        if (!res.ok) throw new Error("Lỗi lưu");
+        return res.json();
+      },
+      onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ['diaryEntries'] });
+          setViewMode('list');
+          toast.success("Đã lưu nhật ký.");
+      }
+  });
+
+  const handleSave = () => {
+    if (!currentEntry.title.trim()) {
+        toast.warning("Bạn chưa đặt tiêu đề cho nhật ký kìa.");
+        return;
+    }
+    saveMutation.mutate({
+        title: currentEntry.title,
+        content: currentEntry.content,
+        theme: currentEntry.theme
+    });
+  };
 
   const filteredEntries = useMemo(() => {
       if (filter === 'all') return entries;
@@ -72,91 +147,11 @@ const TabDiary = () => {
     setViewMode('write');
   };
 
-  const handleDelete = async (id, e) => {
-    if(e) e.stopPropagation(); 
-    if (window.confirm('Bạn có chắc chắn muốn xóa trang nhật ký này?')) {
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        
-        if (id !== null) {
-            try {
-                await fetch(`${API}/users/diary/${id}/`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-            } catch (err) {
-                console.error("Lỗi xóa nhật ký:", err);
-                return;
-            }
-        }
-        
-        setEntries(prev => prev.filter(item => item.id !== id));
-        if (viewMode === 'write') setViewMode('list');
-    }
-  };
-
-  const handleSave = async () => {
-    if (!currentEntry.title.trim()) {
-        alert("Vui lòng đặt tên cho nhật ký!");
-        return;
-    }
-    
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const isNew = currentEntry.id === null;
-    const url = isNew ? `${API}/users/diary/` : `${API}/users/diary/${currentEntry.id}/`;
-    const method = isNew ? 'POST' : 'PATCH';
-
-    try {
-        const res = await fetch(url, {
-            method: method,
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                title: currentEntry.title,
-                content: currentEntry.content,
-                theme: currentEntry.theme
-            })
-        });
-
-        if (res.ok) {
-            const savedEntry = await res.json();
-            if (isNew) {
-                setEntries([savedEntry, ...entries]); 
-            } else {
-                setEntries(entries.map(e => e.id === savedEntry.id ? savedEntry : e));
-            }
-            setViewMode('list');
-        } else {
-            alert("Có lỗi khi lưu nhật ký.");
-        }
-    } catch (err) {
-        console.error("Lỗi lưu nhật ký:", err);
-    }
-  };
 
   const getThemeImage = (themeId) => {
       const theme = DIARY_THEMES.find(t => t.id === themeId);
       return theme ? theme.image : DIARY_THEMES[0].image;
   };
-
-  useEffect(() => {
-    const fetchDiary = async () => {
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      try {
-        const res = await fetch(`${API}/users/diary/`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setEntries(data);
-        }
-      } catch (err) {
-        console.error("Lỗi lấy nhật ký:", err);
-      }
-    };
-    fetchDiary();
-  },[API]);
 
   return (
     <div className="w-full h-full text-white max-w-5xl mx-auto flex flex-col">
@@ -199,7 +194,6 @@ const TabDiary = () => {
             </div>
 
             {entries.length === 0 ? (
-                // Trường hợp 1: Trắng tay hoàn toàn
                 <div className="flex-1 flex flex-col items-center justify-center py-20 text-center opacity-70">
                     <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4">
                         <Edit3 className="w-10 h-10 text-gray-400" />
@@ -208,12 +202,10 @@ const TabDiary = () => {
                     <p className="text-sm text-gray-400 mt-1">Hãy bắt đầu ghi lại cảm xúc của ngày hôm nay nhé.</p>
                 </div>
             ) : filteredEntries.length === 0 ? (
-                // Trường hợp 2: Có viết nhưng lọc không ra
                 <div className="flex-1 flex flex-col items-center justify-center py-20 text-center opacity-70">
                     <p className="text-gray-300 font-medium">Không tìm thấy nhật ký nào trong thời gian này.</p>
                 </div>
             ) : (
-                // Trường hợp 3: Có dữ liệu đã lọc
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 overflow-y-auto custom-scrollbar pr-2 pb-10">
                     {filteredEntries.map((entry) => (
                         <motion.div 

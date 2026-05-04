@@ -5,6 +5,7 @@ import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, 
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceArea 
 } from 'recharts';
+import { useQuery } from '@tanstack/react-query';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -30,45 +31,38 @@ const fakeGenreData = [{ name: 'Lofi & Chill', value: 45, color: '#66D0BC' }, { 
 
 const TabStats = () => {
   const [timeFilter, setTimeFilter] = useState('month'); 
-  const [hasData, setHasData] = useState(false); 
-  const [rawData, setRawData] = useState([]);
+  const [selectedSessionId, setSelectedSessionId] = useState('');
   const [chartData, setChartData] = useState([]);
   const [dateRangeText, setDateRangeText] = useState('');
 
-  const [isoCurveData, setIsoCurveData] = useState([]);
-  const [timeStats, setTimeStats] = useState([]);
-  const [genreStats, setGenreStats] = useState([]);
-  const [sessionHistory, setSessionHistory] = useState([]);
-  const [selectedSessionId, setSelectedSessionId] = useState('');
-
   const API = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 
-useEffect(() => {
-    const fetchData = async () => {
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        try {
-            const resDass = await fetch(`${API}/users/dass21/`, { headers: { 'Authorization': `Bearer ${token}` } });
-            if (resDass.ok) {
-                const data = await resDass.json();
-                setRawData(data);
-                if (data.length > 0) setHasData(true);
-            }
-            const url = `${API}/users/stats/?filter=${timeFilter}${selectedSessionId ? `&session_id=${selectedSessionId}` : ''}`;
-            const resStats = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
-            if (resStats.ok) {
-                const dataStats = await resStats.json();
-                setIsoCurveData(dataStats.iso_curve);
-                setTimeStats(dataStats.time_stats);
-                setGenreStats(dataStats.genre_stats);
-                setSessionHistory(dataStats.session_history); 
-                if (!selectedSessionId && dataStats.session_history.length > 0) {
-                    setSelectedSessionId(dataStats.session_history[0].id); 
-                }
-            }
-        } catch (err) { console.error(err); }
-    };
-    fetchData();
-  }, [API, selectedSessionId, timeFilter]);
+  const { data: rawData = [], isLoading: isDassLoading } = useQuery({
+    queryKey: ['dass21'],
+    queryFn: async () => {
+      const res = await fetch(`${API}/users/dass21/`, { headers: { 'Authorization': `Bearer ${token}` } });
+      if (!res.ok) throw new Error('Network response was not ok');
+      return res.json();
+    }
+  });
+
+  // DÙNG REACT QUERY ĐỂ LẤY STATS (Tự động gọi lại nếu timeFilter hoặc selectedSessionId thay đổi)
+  const { data: statsData, isLoading: isStatsLoading } = useQuery({
+    queryKey: ['userStats', timeFilter, selectedSessionId],
+    queryFn: async () => {
+      const url = `${API}/users/stats/?filter=${timeFilter}${selectedSessionId ? `&session_id=${selectedSessionId}` : ''}`;
+      const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+      if (!res.ok) throw new Error('Network response was not ok');
+      return res.json();
+    },
+    // Tự động set session ID mặc định nếu chưa có
+    onSuccess: (data) => {
+        if (!selectedSessionId && data.session_history?.length > 0) {
+            setSelectedSessionId(data.session_history[0].id);
+        }
+    }
+  });
 
   useEffect(() => {
     if (rawData.length === 0) return;
@@ -127,6 +121,18 @@ useEffect(() => {
     }
 
   }, [rawData, timeFilter]);
+
+  const hasData = rawData.length > 0;
+  const isLoading = isDassLoading || isStatsLoading;
+
+  if (isLoading && !hasData) {
+      return <div className="text-center text-gray-400 py-20">Đang tải dữ liệu biểu đồ...</div>;
+  }
+
+  const timeStats = statsData?.time_stats || [];
+  const genreStats = statsData?.genre_stats || [];
+  const isoCurveData = statsData?.iso_curve || [];
+  const sessionHistory = statsData?.session_history || [];
 
   return (
     <motion.div 

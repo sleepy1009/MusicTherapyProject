@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Music, BookOpen } from 'lucide-react';
@@ -11,12 +11,15 @@ import SwapModal from '../components/player/SwapModal';
 import CenterVisualizer from '../components/player/CenterVisualizer';
 import PlaylistSidebar from '../components/player/PlaylistSidebar';
 import MediaController from '../components/player/MediaController';
+import ChatPanel from '../components/player/ChatPanel';
+import { useToast } from '../components/ToastContext';
 
 const PlayerLayout = () => {
     const { 
         playlistData, currentSong, volume, isMuted,
         setIsPlaying, setDuration, setPlayerTarget, handleNext,
-        showChat, rightPanelMode
+        showChat, rightPanelMode,
+        showPlaylistDebug, setShowPlaylistDebug
     } = usePlayer();
 
     if (!playlistData || playlistData.length === 0) {
@@ -25,6 +28,9 @@ const PlayerLayout = () => {
 
     const chatWidth = showChat && !rightPanelMode ? 778 : 486;  // 1.8 of R case | 1800px * 27%
     const rightWidth = rightPanelMode && !showChat ? 680 : 486; // 1.6 of R case | 1800px * 27%
+
+    const toast = useToast();
+    const [playlistHeaderClicks, setPlaylistHeaderClicks] = useState(0);
 
     const onReady = (event) => {
         setPlayerTarget(event.target);
@@ -39,19 +45,33 @@ const PlayerLayout = () => {
             setDuration(event.target.getDuration());
             event.target.setVolume(volume); 
             if (isMuted) event.target.mute();
-        } else {
+        } 
+        else if (event.data === 2) {
             setIsPlaying(false);
         }
-        if (event.data === 0) handleNext(); 
+        
+        if (event.data === 0) {
+            handleNext();
+        }
+    };
+
+    const handlePlaylistHeaderClick = () => {
+        const next = playlistHeaderClicks + 1;
+        setPlaylistHeaderClicks(next);
+        if (next >= 5) {
+            setShowPlaylistDebug(true); 
+            setPlaylistHeaderClicks(0);
+            toast.info("Đã kích hoạt.");
+        }
     };
 
     return (
         <div className="relative w-full flex-1 pt-16 flex flex-col overflow-hidden">
             {currentSong.youtube_id && (
-                <div className="hidden">
+                <div className="absolute w-[1px] h-[1px] opacity-0 pointer-events-none overflow-hidden z-[-1]">
                     <YouTube 
                         videoId={currentSong.youtube_id} 
-                        opts={{ height: '0', width: '0', playerVars: { autoplay: 1, controls: 0, disablekb: 1 } }} 
+                        opts={{ height: '1', width: '1', playerVars: { autoplay: 1, controls: 0, disablekb: 1 } }} 
                         onReady={onReady} onStateChange={onStateChange} 
                     />
                 </div>
@@ -83,8 +103,9 @@ const PlayerLayout = () => {
                         {showChat && (
                             <motion.div initial={{ opacity: 0, width: 0, x: -50 }} animate={{ opacity: 1, width: chatWidth, x: 0 }} exit={{ opacity: 0, width: 0, x: -50 }} transition={{ duration: 0.4, ease: "easeInOut" }}
                                 className="h-full min-h-[440px] bg-white/5 border border-white/20 rounded-3xl overflow-hidden flex flex-col backdrop-blur-sm flex-shrink-0">
-                                <div className="p-4 border-b border-white/10 font-bold text-indigo-300">Chatbot Tâm Lý</div>
-                                <div className="flex-1 p-4 flex items-center justify-center text-gray-500 text-sm">Vùng Chat (Sắp phát triển)</div>
+                                
+                                <ChatPanel />
+                                
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -100,14 +121,28 @@ const PlayerLayout = () => {
                                 
                                 {rightPanelMode === 'playlist' && (
                                     <>
-                                        <div className="p-4 border-b border-white/10 font-bold text-[#9ED3DC] flex items-center gap-2"><Music size={18} /> Danh sách phát</div>
+                                        <div 
+                                            onClick={handlePlaylistHeaderClick}
+                                            className="p-4 border-b border-white/10 font-out-text text-[#9ED3DC] flex items-center justify-between cursor-pointer select-none"
+                                        >
+                                            <div className="flex items-center gap-2"><Music size={18} /> Danh sách phát</div>
+                                            
+                                            {showPlaylistDebug && (
+                                                <motion.button 
+                                                    initial={{ scale: 0 }} animate={{ scale: 1 }}
+                                                    className="text-[9px] bg-[#9ED3DC] text-black px-2 py-0.5 rounded font-bold uppercase tracking-tighter"
+                                                >
+                                                    NCKH Report
+                                                </motion.button>
+                                            )}
+                                        </div>
                                         <PlaylistSidebar />
                                     </>
                                 )}
 
                                 {rightPanelMode === 'diary' && (
                                     <>
-                                        <div className="p-4 border-b border-white/10 font-bold text-rose-300 flex items-center gap-2">
+                                        <div className="p-4 border-b border-white/10 font-out-text text-rose-300 flex items-center gap-2">
                                             <BookOpen size={18} /> Nhật Ký Cảm Xúc
                                         </div>
                                         <DiaryPanel />
@@ -118,6 +153,7 @@ const PlayerLayout = () => {
                     </AnimatePresence>
                 </div>
             </div>
+            
 
             <MediaController />
         </div>

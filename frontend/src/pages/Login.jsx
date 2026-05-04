@@ -3,6 +3,8 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LogIn, Mail, Lock, AlertCircle, Star, Eye, EyeOff } from 'lucide-react';
 import ParticlesBackground from '../components/reactbits/ParticlesBackground';
+import { useToast } from '../components/ToastContext';
+import { useGoogleLogin } from '@react-oauth/google';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -12,6 +14,9 @@ const Login = () => {
   const [loginAttempts, setLoginAttempts] = useState(0); 
   const [isBlocked, setIsBlocked] = useState(false); 
   const [showPassword, setShowPassword] = useState(false);
+
+  const toast = useToast();
+  
   
   const [rememberMe, setRememberMe] = useState(true);
   
@@ -89,13 +94,17 @@ const Login = () => {
         const storage = rememberMe ? localStorage : sessionStorage;
         storage.setItem('token', data.access); 
         storage.setItem('username', username);
-        
+        toast.success("Đăng nhập thành công!");
+
 
         const profileRes = await fetch(`${API}/users/me/`, {
           headers: { 'Authorization': `Bearer ${data.access}` }
         });
         const profileData = await profileRes.json();
         storage.setItem('email', profileData.email);
+
+        window.dispatchEvent(new Event('checkConsent'));
+
         if (!profileData.age) {
           navigate('/onboarding');
         } else {
@@ -127,6 +136,47 @@ const Login = () => {
       console.error(err);
     }
   };
+
+  const loginWithGoogle = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const res = await fetch(`${API}/users/google-login/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: tokenResponse.access_token })
+        });
+        
+        if (res.ok) {
+            const data = await res.json();
+            const storage = rememberMe ? localStorage : sessionStorage;
+            storage.setItem('token', data.access); 
+            storage.setItem('username', data.username);
+            
+            const profileRes = await fetch(`${API}/users/me/`, {
+                headers: { 'Authorization': `Bearer ${data.access}` }
+            });
+            const profileData = await profileRes.json();
+            
+            storage.setItem('email', profileData.email);
+            window.dispatchEvent(new Event('checkConsent'));
+
+            if (!profileData.age) {
+                navigate('/onboarding');
+            } else {
+                localStorage.setItem('displayName', profileData.display_name || profileData.username);
+                if (profileData.avatar) localStorage.setItem('avatar', profileData.avatar);
+                navigate('/');
+                toast.success("Đăng nhập bằng Google thành công!");
+            }
+        } else {
+             setError('Lỗi xác thực từ Server.');
+        }
+      } catch (err) {
+        setError('Lỗi kết nối máy chủ.');
+      }
+    },
+    onError: () => setError('Đăng nhập Google bị hủy.')
+  });
 
   return (
     <div className="relative w-full flex-1 flex items-center justify-center min-h-[calc(100vh-64px)] pt-28 pb-20">
@@ -257,7 +307,11 @@ const Login = () => {
           <div className="h-px bg-white/10 flex-1"></div>
         </div>
 
-         <button className="w-2/4 mx-auto mt-4 py-2 bg-transparent  hover:bg-gray-100/20 text-main_text text-sm font-semibold rounded-full transition-colors flex items-center justify-center gap-2 cursor-pointer">
+         <button 
+          type="button" 
+          onClick={() => loginWithGoogle()}
+          className="w-2/4 mx-auto mt-4 py-2 bg-transparent hover:bg-gray-100/20 text-main_text text-sm font-semibold rounded-full transition-colors flex items-center justify-center gap-2 cursor-pointer"
+        >
           <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-4 h-4" />
           Đăng nhập với Google
         </button>

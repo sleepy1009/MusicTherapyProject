@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Calendar, Mail, Headphones, Music, AlertOctagon, Edit3, Shield, Check, X, Save, PersonStanding   } from 'lucide-react';
 
+
 const MUSIC_GENRES = {
   'pop_group': 'Pop / Nhạc trẻ',
   'kpop_group': 'K-Pop & J-Pop',
@@ -74,6 +75,8 @@ const TabInfo = ({ userData, onEditAvatar, onSaveProfile }) => {
     }
   };
 
+  const avatarUrl = userData.avatar.replace(/s\d+-c/, "s512-c");
+
   return (
     <motion.div 
         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} 
@@ -111,10 +114,10 @@ const TabInfo = ({ userData, onEditAvatar, onSaveProfile }) => {
             <div className="flex flex-col items-center lg:items-start gap-6">
                 <div className={`relative group ${isEditing ? 'cursor-pointer' : ''}`} 
                     onClick={() => isEditing && onEditAvatar()}
-                    style={{ width: '80%', maxWidth: '164px', minWidth: '164px' }}>
+                    style={{ width: '80%', maxWidth: '164px', minWidth: '164px' }}> 
                 <div className={`w-full rounded-3xl overflow-hidden border-4 bg-black/50 shadow-xl transition-all duration-300
                                 ${isEditing ? 'border-[#41A67E]' : 'border-white/10'}`}>
-                    <img src={userData.avatar} alt="Avatar" className="w-full h-auto object-cover aspect-square" />
+                    <img src={avatarUrl} alt="Avatar" className="w-full h-auto object-cover aspect-square" />
                 </div>
                 {isEditing && (
                     <div className="absolute inset-0 bg-black/60 rounded-3xl flex flex-col items-center justify-center gap-2 transition-opacity">

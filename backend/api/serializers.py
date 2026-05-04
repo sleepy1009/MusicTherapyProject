@@ -1,11 +1,11 @@
 from rest_framework import serializers
-from .models import User, DiaryEntry, DassResult
+from .models import User, DiaryEntry, DassResult, ChatMessage, ChatSession
 
 # rules for info User (Onboarding(step 2 register)  Get Profile)
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'display_name', 'age', 'avatar', 'music_preferences']
+        fields = ['id', 'username', 'email', 'display_name', 'age', 'avatar', 'music_preferences', 'is_consented']
         read_only_fields = ['id', 'username', 'email']
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -37,3 +37,8 @@ class DassResultSerializer(serializers.ModelSerializer):
         fields = ['id', 'stress_score', 'anxiety_score', 'depression_score', 
                   'stress_level', 'anxiety_level', 'depression_level', 'created_at']
         read_only_fields = ['id', 'created_at']
+
+class ChatMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatMessage
+        fields = ['id', 'sender', 'content', 'timestamp']

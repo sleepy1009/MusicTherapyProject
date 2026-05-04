@@ -1,10 +1,21 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useToast } from '../ToastContext';
 
 const PlayerContext = createContext();
 export const usePlayer = () => useContext(PlayerContext);
 
 export const PlayerProvider = ({ children, initialPlaylist, mode, initialSessionId }) => {
     const API = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
+    const [skipCount, setSkipCount] = useState(0);
+
+    const navigate = useNavigate();
+    const location = useLocation();
+    
+
+    const toast = useToast();
+    const [unreadCount, setUnreadCount] = useState(0);
     
     const [playlistData, setPlaylistData] = useState(initialPlaylist || []);
     const [sessionId, setSessionId] = useState(initialSessionId);
@@ -26,6 +37,13 @@ export const PlayerProvider = ({ children, initialPlaylist, mode, initialSession
     const [showLikeTooltip, setShowLikeTooltip] = useState(false);
     const [swapState, setSwapState] = useState({ isOpen: false, trackIndex: null, options: [], loading: false });
 
+    const [showPlaylistDebug, setShowPlaylistDebug] = useState(false);
+    const [showPostMood, setShowPostMood] = useState(false);
+
+    const skipTimeoutsRef = useRef(new Map());
+
+    const hasAskedPostMood = useRef(false);
+
     const currentSong = playlistData[currentIndex] || {};
 
     useEffect(() => {
@@ -36,8 +54,10 @@ export const PlayerProvider = ({ children, initialPlaylist, mode, initialSession
         let interval;
         if (isPlaying && playerTarget) {
             interval = setInterval(async () => {
-                const time = await playerTarget.getCurrentTime();
-                setCurrentTime(time);
+                try {
+                    const time = await playerTarget.getCurrentTime();
+                    setCurrentTime(time);
+                } catch (e) { }
             }, 1000);
         }
         return () => clearInterval(interval);
@@ -48,12 +68,133 @@ export const PlayerProvider = ({ children, initialPlaylist, mode, initialSession
         isPlaying ? playerTarget.pauseVideo() : playerTarget.playVideo();
     };
 
-    const handleNext = () => {
-        if (currentIndex < playlistData.length - 1) setCurrentIndex(prev => prev + 1);
-        else { playerTarget?.pauseVideo(); playerTarget?.seekTo(0); }
+    const triggerEmergencySOS = async () => {
+        console.warn("KÍCH HOẠT QUY TRÌNH SOS");
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        try {
+            const res = await fetch(`${API}/users/therapy-playlist/?force_mode=sos`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (res.ok) {
+                const data = await res.json();
+                const sosTracks = data.recommended_tracks;
+                
+                setPlaylistData(sosTracks);
+                setCurrentIndex(0);
+                
+                if (playerTarget && sosTracks.length > 0 && sosTracks[0].youtube_id) {
+                    playerTarget.loadVideoById(sosTracks[0].youtube_id);
+                    setIsPlaying(true);
+                }
+            }
+        } catch (err) {
+            console.error("Lỗi kích hoạt SOS:", err);
+        }
     };
 
+    const reportFeedback = async (trackId, action) => {
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        try {
+            await fetch(`${API}/users/music-feedback/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ track_id: trackId, action: action, session_id: sessionId })
+            });
+            console.log(`📊 AI Feedback: Đã báo cáo [${action}] cho bài hát ${trackId}`);
+        } catch (e) { console.error("Lỗi gửi feedback:", e); }
+    };
+
+    const handleNext = () => {
+        if (currentSong) {
+            let completionRate = 0;
+            if (duration > 0) {
+                completionRate = (currentTime / duration) * 100;
+            }
+
+            const trackToReport = currentSong.id;
+
+            if (mode === 'therapy') {
+                if (completionRate < 40) {
+                    setSkipCount(prev => prev + 1);
+
+                    if (!localStorage.getItem('has_shown_skip_guidance')) {
+                        toast.info(
+                            "Mẹo nhỏ: Tuân thủ thứ tự bài hát sẽ giúp hiệu quả trị liệu tốt nhất. Nếu giai điệu này không hợp, hãy dùng tính năng Đổi bài (Swap) ở danh sách phát thay vì Bỏ qua nhé!", 
+                            12000 
+                        );
+                        localStorage.setItem('has_shown_skip_guidance', 'true');
+                    }
+                    
+                    console.log(`⏱️ Đưa bài ${trackToReport} vào Map chờ phạt (5s)...`);
+                    const timeoutId = setTimeout(() => {
+                        reportFeedback(trackToReport, 'SKIPPED');
+                        skipTimeoutsRef.current.delete(trackToReport);
+                    }, 5000);
+                    
+                    skipTimeoutsRef.current.set(trackToReport, timeoutId);
+                } 
+                else if (completionRate > 80) {
+                    reportFeedback(trackToReport, 'COMPLETED');
+                    setSkipCount(0);
+                }
+            }
+        }
+
+        if (currentIndex < playlistData.length - 1) {
+            setCurrentIndex(prev => prev + 1);
+        } else { 
+            playerTarget?.pauseVideo(); 
+            playerTarget?.seekTo(0); 
+            if (mode === 'therapy' && !hasAskedPostMood.current) {
+                setShowPostMood(true);
+                hasAskedPostMood.current = true;
+            }
+        }
+    };
+
+    useEffect(() => {
+        if (showChat) setUnreadCount(0);
+    }, [showChat]);
+
+    useEffect(() => {
+        if (skipCount >= 3) {
+            const triggerProactiveBot = async () => {
+                const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                const songContext = currentSong?.title ? `${currentSong.title} - ${currentSong.artist}` : 'Đang không rõ';
+                const systemInstruction = "Người dùng vừa bỏ qua (skip) nhạc liên tục 3 lần. Hãy chủ động hỏi thăm một cách tinh tế, tự nhiên. Hỏi xem họ đang bồn chồn trong lòng, hay do nhạc chưa hợp gu. Đi thẳng vào vấn đề, TUYỆT ĐỐI KHÔNG CHÀO HỎI LẠI.";
+
+                try {
+                    const res = await fetch(`${API}/users/chat/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ 
+                            content: systemInstruction, 
+                            current_song: songContext,
+                            current_track_id: currentSong?.id, 
+                            is_system_event: true 
+                        })
+                    });
+                    
+                    if (res.ok) {
+                        toast.info("MindMelody vừa gửi cho bạn một lời nhắn...");
+                        setUnreadCount(prev => prev + 1); 
+                    }
+                } catch (err) { console.error(err); }
+            };
+
+            triggerProactiveBot();
+            setSkipCount(0); 
+        }
+    }, [skipCount, currentSong]);
+
     const handlePrev = () => {
+        if (currentSong && skipTimeoutsRef.current.has(currentSong.id)) {
+            clearTimeout(skipTimeoutsRef.current.get(currentSong.id));
+            skipTimeoutsRef.current.delete(currentSong.id);
+            console.log(`Đã HỦY lệnh phạt Skip cho bài ${currentSong.id} (Do quay lại)`);
+        }
+
         if (currentIndex > 0) setCurrentIndex(prev => prev - 1);
         else playerTarget?.seekTo(0);
     };
@@ -101,26 +242,51 @@ export const PlayerProvider = ({ children, initialPlaylist, mode, initialSession
         } catch(e) { setSwapState(prev => ({ ...prev, loading: false })); }
     };
 
-    const handleConfirmSwap = async (newTrack) => {
-        const idx = swapState.trackIndex;
-        const oldTrack = playlistData[idx];
+    const handleConfirmSwap = async (selectedTrack) => {
+        setSwapState(prev => ({ ...prev, loading: true }));
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        try {
-            const newPlaylist = [...playlistData];
-            newPlaylist[idx] = newTrack;
-            setPlaylistData(newPlaylist);
-            setSwapState({ isOpen: false, trackIndex: null, options: [], loading: false });
+        const oldTrack = playlistData[swapState.trackIndex];
 
-            if(token && sessionId) {
-                await fetch(`${API}/users/swap-confirm/`, {
+        try {
+            if (sessionId) {
+                const response = await fetch(`${API}/users/swap-confirm/`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ session_id: sessionId, old_track_id: oldTrack.id, new_track_data: newTrack, order_index: idx + 1 })
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        old_track_id: oldTrack.id,
+                        new_track_data: {
+                            id: selectedTrack.id, title: selectedTrack.title, artist: selectedTrack.artist,
+                            image: selectedTrack.image, youtube_id: selectedTrack.youtube_id,
+                            duration: selectedTrack.duration, valence: selectedTrack.valence,
+                            energy: selectedTrack.energy, tempo: selectedTrack.tempo
+                        },
+                        order_index: swapState.trackIndex + 1 
+                    })
                 });
+                if (!response.ok) throw new Error("API Swap Failed");
             }
-        } catch(e) { console.error(e); }
-    };
 
+            const newPlaylist = [...playlistData];
+            newPlaylist[swapState.trackIndex] = { ...selectedTrack, phase: oldTrack.phase };
+            setPlaylistData(newPlaylist);
+
+            navigate(location.pathname, {
+                replace: true, 
+                state: { ...location.state, playlist: newPlaylist }
+            });
+
+            setSwapState({ isOpen: false, trackIndex: null, options: [], loading: false });
+            if (currentIndex === swapState.trackIndex) {
+                if (playerTarget) playerTarget.loadVideoById(selectedTrack.youtube_id);
+                setCurrentTime(0);
+                setIsPlaying(true);
+            }
+        } catch (error) {
+            console.error("Lỗi lưu swap:", error);
+            setSwapState(prev => ({ ...prev, loading: false }));
+        }
+    };
 
     const [diaryEntries, setDiaryEntries] = useState([]);
     const [diaryFilter, setDiaryFilter] = useState('all');
@@ -173,7 +339,11 @@ export const PlayerProvider = ({ children, initialPlaylist, mode, initialSession
         diaryViewMode, setDiaryViewMode,
         currentDiaryEntry, setCurrentDiaryEntry,
         filteredDiaryEntries,
-        fetchDiary
+        fetchDiary,
+        triggerEmergencySOS,
+        showPlaylistDebug, setShowPlaylistDebug,
+        showPostMood, setShowPostMood,
+        sessionId
     };
 
     return (

@@ -3,6 +3,9 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LogIn, User, LogOut, Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+import { useToast } from './ToastContext'; 
+import { useConfirm } from './ConfirmContext'; 
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -28,6 +31,9 @@ const Header = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false); 
   const [displayName, setDisplayName] = useState('');
   const [userAvatar, setUserAvatar] = useState('/icon002.png'); 
+  
+  const toast = useToast();
+  const { confirm } = useConfirm();
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -54,11 +60,23 @@ const Header = () => {
     return () => window.removeEventListener('profileUpdated', updateUserInfo);
   }, [location.pathname]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const isConfirmed = await confirm({
+        title: "Đăng xuất?",
+        message: "Bạn có chắc chắn muốn đăng xuất khỏi MindMelody không?",
+        confirmText: "Đăng xuất",
+        cancelText: "Hủy",
+        type: "warning" 
+    });
+
+    if (!isConfirmed) return;
+
     localStorage.clear();
     sessionStorage.clear();
     setIsLoggedIn(false);
     navigate('/'); 
+
+    toast.success("Đã đăng xuất thành công. Hẹn gặp lại bạn nhé!");
   };
 
   return (
@@ -142,7 +160,7 @@ const Header = () => {
                     whileHover={{ scale: 1.05 }} 
                     whileTap={{ scale: 0.95 }}
                     onClick={handleLogout}
-                    className="flex items-center bg-white/5 gap-2 px-2 py-1 ml-1 text-sm font-bold font-out-text text-[#EB4C4C]/80 hover:text-[#EB4C4C] rounded-full transition-colors cursor-pointer"
+                    className="flex items-center bg-white/5 gap-2 px-2 py-1 ml-1 text-sm font-bold font-out-text text-[#EB4C4C]/80 hover:text-[#EB4C4C]  rounded-full transition-colors cursor-pointer"
                   >
                     <span className="hidden sm:inline">Đăng xuất</span>
                   </motion.button>

@@ -10,6 +10,9 @@ import CardSelectionView from './focus/CardSelectionView';
 import PlaylistDock from './focus/PlaylistDock';
 import CheckpointView from './focus/CheckpointView';
 
+import { useToast } from './ToastContext'; 
+import { useConfirm } from './ConfirmContext';
+
 const API = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 const FocusOverlay = ({ onClose }) => {
@@ -18,7 +21,6 @@ const FocusOverlay = ({ onClose }) => {
   const [showConfirm, setShowConfirm] = useState(false); 
   const [latestResult, setLatestResult] = useState(null);
   
-  // DỮ LIỆU ĐỘNG TỪ API
   const [dynamicIsoSteps, setDynamicIsoSteps] = useState([]); 
   const [currentStep, setCurrentStep] = useState(0); // Từ 0 đến 6 (7 giai đoạn)
   const [selectedCards, setSelectedCards] = useState([]);
@@ -29,6 +31,9 @@ const FocusOverlay = ({ onClose }) => {
 
   const navigate = useNavigate();
   const location = useLocation();
+
+  const toast = useToast();
+  const { confirm } = useConfirm();
 
   useEffect(() => {
     const checkUserStatus = async () => {
@@ -54,7 +59,7 @@ const FocusOverlay = ({ onClose }) => {
                     setLatestPlaylist(sessionData);
                 }
             } catch (sessionErr) {
-                console.error("⚠️ Cảnh báo: Lỗi khi lấy Playlist cũ:", sessionErr);
+                console.error("Cảnh báo: Lỗi khi lấy Playlist cũ:", sessionErr);
             }
 
             if (location.state?.autoStartTherapy) {
@@ -82,15 +87,25 @@ const FocusOverlay = ({ onClose }) => {
       }
   }, [step]);
 
-  const fetchTherapyMusic = async () => {
+const fetchTherapyMusic = async (mode = 'auto') => {
       setStep('loading-music');
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       try {
-          const res = await fetch(`${API}/users/therapy-playlist/`, { headers: { 'Authorization': `Bearer ${token}` } });
+          const res = await fetch(`${API}/users/therapy-playlist/?force_mode=${mode}`, { 
+              headers: { 'Authorization': `Bearer ${token}` } 
+          });
           const data = await res.json();
           
+          if (data.is_sos) {
+              setSelectedCards(data.recommended_tracks);
+              setTimeout(() => {
+                  handleStartListening(data.recommended_tracks);
+              }, 500);
+              return;
+          }
+
           if (data.has_conflict) {
-              alert(data.conflict_message); 
+              toast.warning(data.conflict_message); 
           }
 
           const stepsFormat = [];
@@ -120,7 +135,7 @@ const FocusOverlay = ({ onClose }) => {
           setStep('card-selection');
       } catch (err) {
           console.error(err);
-          alert("Lỗi khi tạo playlist!");
+          toast.error("Lỗi khi tạo playlist! Vui lòng thử lại.");
           setStep('intro');
       }
   };
@@ -174,20 +189,23 @@ const FocusOverlay = ({ onClose }) => {
       setDisplayedCards(dynamicIsoSteps[0].cards.slice(0, 3));
   };
 
-  const handleStartListening = async () => {
+const handleStartListening = async (overrideTracks = null) => {
       setStep('loading-music'); 
       
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      let finalPlaylist = selectedCards;
+      const validOverride = Array.isArray(overrideTracks) ? overrideTracks : null;
+      const tracksToProcess = validOverride || selectedCards;
+      
+      let finalPlaylist = tracksToProcess;
 
       try {
           const ytRes = await fetch(`${API}/users/youtube-links/`, {
               method: 'POST',
               headers: headers,
-              body: JSON.stringify({ tracks: selectedCards })
+              body: JSON.stringify({ tracks: tracksToProcess })
           });
 
           if (ytRes.ok) {
@@ -207,32 +225,34 @@ const FocusOverlay = ({ onClose }) => {
           }
       } catch (error) {
           console.error("Lỗi khi xử lý nhạc:", error);
+          toast.error("Có lỗi xảy ra khi xử lý nhạc.");
       }
 
       onClose();
       navigate('/player', { state: { playlist: finalPlaylist } });
   };
 
+  const handleCloseClick = async () => {
+      const isConfirmed = await confirm({
+          title: "Chú ý",
+          message: "Bạn có chắc muốn thoát không? Quá trình hiện tại sẽ bị hủy.",
+          confirmText: "Thoát luôn",
+          cancelText: "Tiếp tục",
+          type: "warning" 
+      });
+
+      if (isConfirmed) {
+          onClose(); 
+      }
+  };
+  
   return (
     <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
       
-      <button onClick={() => setShowConfirm(true)} className="absolute top-6 right-6 p-2 bg-white/10 rounded-full hover:bg-white/20 transition text-white z-50">
+      <button onClick={handleCloseClick} className="absolute top-6 right-6 p-2 bg-white/10 rounded-full hover:bg-white/20 transition text-white z-50">
         <X className="w-6 h-6" />
       </button>
 
-      <AnimatePresence>
-            {showConfirm && (
-                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
-                className="absolute z-[60] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-sm w-full text-center p-6 rounded-2xl bg-black/20 border border-white/20 backdrop-blur-xl">
-                    <h3 className="text-lg font-semibold text-[#FFD45A] mb-2 flex justify-center items-center gap-2"><AlertCircle /> Chú ý</h3>
-                    <p className="text-gray-200 mb-6">Bạn có chắc muốn thoát không? Quá trình sẽ bị hủy.</p>
-                    <div className="flex gap-3 justify-center">
-                        <button onClick={() => setShowConfirm(false)} className="px-4 py-2 rounded-lg bg-[#2E6F40]/60 hover:bg-[#2E6F40] text-white transition">Tiếp tục làm</button>
-                        <button onClick={onClose} className="px-4 py-2 rounded-lg bg-red-600/60 hover:bg-red-600 text-white transition">Thoát luôn</button>
-                    </div>
-                </motion.div>
-            )}
-      </AnimatePresence>
 
       <div className="absolute top-10 left-10 md:left-14 z-[60] w-32 h-32 pointer-events-none">
         <Mascot status={step === 'loading-music' || step === 'checking' ? 'thinking' : 'listening'} className="w-full h-full" />

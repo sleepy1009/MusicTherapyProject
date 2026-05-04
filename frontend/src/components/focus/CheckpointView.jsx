@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Brain, RefreshCw, PlayCircle, Music, Activity, Calendar, ChevronRight } from 'lucide-react';
+import { Brain, RefreshCw, PlayCircle, Music, Activity, Calendar, ChevronRight, Shield, Phone } from 'lucide-react';
 import Mascot from '../Mascot';
 
 const SCORE_COLOR = (level) => {
@@ -29,6 +29,10 @@ const CheckpointView = ({ latestResult, latestPlaylist, onUseOldResult, onTakeNe
     day: '2-digit', month: '2-digit', year: 'numeric'
   });
 
+  const isSevere = ['Nặng', 'Rất nặng'].includes(latestResult.stress_level) || 
+                   ['Nặng', 'Rất nặng'].includes(latestResult.anxiety_level) || 
+                   ['Nặng', 'Rất nặng'].includes(latestResult.depression_level);
+
   const actions = [
     {
       key: 'new-playlist',
@@ -36,7 +40,7 @@ const CheckpointView = ({ latestResult, latestPlaylist, onUseOldResult, onTakeNe
       iconBg: 'bg-[#41A67E]/15 text-[#66D0BC]',
       title: 'Tạo Playlist từ kết quả này',
       sub: `Dựa trên đánh giá ngày ${date}`,
-      onClick: onUseOldResult,
+      onClick: () => onUseOldResult('normal'),
       hoverBorder: 'hover:border-[#41A67E]/50',
       hoverBg: 'hover:bg-[#41A67E]/5',
     },
@@ -60,6 +64,16 @@ const CheckpointView = ({ latestResult, latestPlaylist, onUseOldResult, onTakeNe
       hoverBorder: 'hover:border-white/20',
       hoverBg: 'hover:bg-white/5',
     },
+    ...(isSevere ? [{
+      key: 'sos-space',
+      icon: <Shield className="w-5 h-5" />,
+      iconBg: 'bg-rose-500/20 text-rose-400',
+      title: 'Vào Không Gian An Toàn',
+      sub: 'Lắng nghe âm thanh xoa dịu tâm trí',
+      onClick: () => onUseOldResult('sos'),
+      hoverBorder: 'hover:border-rose-500/50',
+      hoverBg: 'hover:bg-rose-500/10',
+    }] : []),
   ];
 
   return (
@@ -73,21 +87,30 @@ const CheckpointView = ({ latestResult, latestPlaylist, onUseOldResult, onTakeNe
 
         <motion.div variants={itemVariants} className="relative w-24 h-24 mb-5 flex-shrink-0">
           {/* Outer ring */}
-          <span className="absolute inset-0 rounded-full border border-[#41A67E]/60 animate-ping" style={{ animationDuration: '2.8s' }} />
+          <span className={`absolute inset-0 rounded-full border animate-ping ${isSevere ? 'border-rose-500/60' : 'border-[#41A67E]/60'}`} style={{ animationDuration: '2.8s' }} />
           {/* Middle ring */}
-          <span className="absolute inset-[-4px] rounded-full border border-[#41A67E]/20" />
+          <span className={`absolute inset-[-4px] rounded-full border ${isSevere ? 'border-rose-500/20' : 'border-[#41A67E]/20'}`} />
           <div className="relative z-10 w-full h-full ">
             <Mascot status="idle" className="w-full h-full" />
           </div>
         </motion.div>
 
-        {/* ── Heading ── */}
+        {/* Heading */}
         <motion.h2 variants={itemVariants} className="text-2xl font-bold text-main_text mb-2 text-center">
           Chào mừng bạn quay lại
         </motion.h2>
+        
         <motion.p variants={itemVariants} className="text-gray-300 text-sm text-center mb-5 leading-relaxed max-w-xl">
-          Bạn muốn tiếp tục từ lần trước hay bắt đầu đánh giá lại hôm nay?
+          {isSevere 
+            ? "Context." 
+            : "Bạn muốn tiếp tục từ lần trước hay bắt đầu đánh giá lại hôm nay?"}
         </motion.p>
+
+        {isSevere && (
+            <motion.div variants={itemVariants} className="bg-rose-500/10 border border-rose-500/20 px-4 py-2 rounded-xl text-xs text-rose-300 flex items-center gap-2 mb-6">
+                <Phone className="w-4 h-4" /> Hotline Hỗ trợ Tâm lý Quốc gia: <b>###</b>
+            </motion.div>
+        )}
 
         <motion.div variants={itemVariants} className="flex flex-wrap justify-center gap-2 mb-7">
           {[
@@ -107,8 +130,8 @@ const CheckpointView = ({ latestResult, latestPlaylist, onUseOldResult, onTakeNe
           </span>
         </motion.div>
 
-        {/* ── Action list ── */}
-        <motion.div variants={itemVariants} className="w-full flex flex-col gap-3">
+        {/* Action list */}
+        <motion.div variants={itemVariants} className="w-full flex flex-col gap-3 pb-8">
           {actions.map((action, i) => (
             <motion.button
               key={action.key}

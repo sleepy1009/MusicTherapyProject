@@ -7,8 +7,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'], // Font mặc định cho toàn web
-        'out-text': ['Roboto Slab', 'serif'], // Font riêng cho Logo/Tiêu đề
+        sans: ['Be Vietnam Pro', 'sans-serif'], // Base font, Inter, Darker Grotesque, Roboto Slab, Be Vietnam Pro
+        'out-text': ['Roboto Slab', 'serif'], // Font highlight
       },
       colors: {
         main_text: '#F6F6F6',

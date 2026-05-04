@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, ArrowRight, Save } from 'lucide-react';
+import { Lock, ArrowRight, Save, Phone } from 'lucide-react';
 import Mascot from '../Mascot';
 import { calculateResult } from '../../utils/dassScoring';
 
@@ -96,31 +96,56 @@ const ResultView = ({ answers, onLoginRequest, onContinue, onSaveSuccess }) => {
         })}
       </div>
 
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="w-full max-w-2xl bg-gradient-to-r from-secondary/10 to-white/10 border border-white/10 rounded-2xl p-8 text-center relative overflow-hidden">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} 
+          className={`w-full max-w-2xl border rounded-2xl p-8 text-center relative overflow-hidden ${
+              ['Nặng', 'Rất nặng'].includes(result.S.label) || ['Nặng', 'Rất nặng'].includes(result.A.label) || ['Nặng', 'Rất nặng'].includes(result.D.label)
+              ? 'bg-gradient-to-r from-primary/10 to-white/10  border-white/10' 
+              : 'bg-gradient-to-r from-secondary/10 to-white/10 border-white/10'
+          }`}
+      >
         <div className="relative z-10">
-          <h3 className="text-2xl font-bold text-main_text mb-3">Liệu trình Âm nhạc Cá nhân hóa</h3>
-          <p className="text-gray-300 mb-8 leading-relaxed">
-            {isLoggedIn 
-              ? "Tuyệt vời! Kết quả của bạn đã sẵn sàng. Hãy lưu lại để chúng tôi tạo ra lộ trình nghe nhạc theo nguyên tắc Iso cho bạn nhé." 
-              : "Chúng tôi đã chuẩn bị một lộ trình nghe nhạc. Để lưu lại kết quả và theo dõi tiến trình, bạn cần đăng nhập."}
-          </p>
+          {(() => {
+              const isSevere = ['Nặng', 'Rất nặng'].includes(result.S.label) || ['Nặng', 'Rất nặng'].includes(result.A.label) || ['Nặng', 'Rất nặng'].includes(result.D.label);
+
+              return isSevere ? (
+                  // SOS
+                  <>
+                      <h3 className="text-2xl font-bold text-main_text mb-3">MindMelody đang lắng nghe bạn</h3>
+                      <p className="text-gray-300 mb-6 leading-relaxed">
+                          MindMelody nhận thấy bạn đang mang một gánh nặng rất lớn. Âm nhạc có thể xoa dịu, nhưng một chuyên gia tâm lý sẽ giúp bạn tháo gỡ tận gốc rễ. Hãy tìm kiếm sự trợ giúp chuyên nghiệp khi bạn sẵn sàng nhé.
+                      </p>
+                      <div className="flex justify-center mb-6">
+                          <div className="bg-rose-500/10 border border-rose-500/20 px-4 py-2 rounded-lg text-sm text-rose-300 flex items-center gap-2">
+                              <Phone className="w-4 h-4" /> Hotline Hỗ trợ Tâm lý Quốc gia: <b>###</b>
+                          </div>
+                      </div>
+
+                  </>
+              ) : (
+                  // base
+                  <>
+                      <h3 className="text-2xl font-bold text-main_text mb-3">Liệu trình Âm nhạc Cá nhân hóa</h3>
+                      <p className="text-gray-300 mb-8 leading-relaxed">
+                          {isLoggedIn 
+                          ? "Kết quả của bạn đã sẵn sàng. Hãy lưu lại để chúng tôi tạo ra lộ trình nghe nhạc cho bạn nhé." 
+                          : "Chúng tôi đã chuẩn bị một lộ trình nghe nhạc. Để lưu lại kết quả và theo dõi tiến trình, bạn cần đăng nhập."}
+                      </p>
+                  </>
+              );
+          })()}
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            
             {isLoggedIn ? (
-                <button onClick={handleSaveResult} disabled={isSaving} className="px-8 py-3 bg-[#41A67E] text-main_text font-bold rounded-full hover:bg-[#66D0BC] transition-colors flex items-center justify-center gap-2 shadow-lg disabled:opacity-50">
-                    <Save className="w-4 h-4" />
-                    {isSaving ? "Đang lưu..." : "Lưu kết quả & Tạo Playlist"}
+                <button onClick={handleSaveResult} disabled={isSaving} className="px-6 py-3 bg-main_text/30 text-white rounded-3xl hover:bg-main_text/40 transition-colors flex items-center justify-center gap-2 shadow-lg disabled:opacity-50">
+                    {isSaving ? "Đang chuẩn bị..." : (
+                        ['Nặng', 'Rất nặng'].includes(result.S.label) || ['Nặng', 'Rất nặng'].includes(result.A.label) || ['Nặng', 'Rất nặng'].includes(result.D.label)
+                        ? "Đưa tôi vào Không gian An toàn"
+                        : "Lưu kết quả & Tạo Playlist"
+                    )}
                 </button>
             ) : (
                 <button onClick={onLoginRequest} className="px-8 py-3 bg-secondary text-black font-bold rounded-full hover:scale-105 transition-transform flex items-center justify-center gap-2 shadow-lg">
                     <Lock className="w-4 h-4" /> Đăng nhập để Lưu
-                </button>
-            )}
-            
-            {!isLoggedIn && (
-                <button onClick={onContinue} className="px-8 py-3 bg-transparent border border-white/20 text-main_text font-medium rounded-full hover:bg-white/10 transition-colors flex items-center justify-center gap-2">
-                    Thử trải nghiệm ngay <ArrowRight className="w-4 h-4" />
                 </button>
             )}
           </div>

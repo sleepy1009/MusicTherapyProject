@@ -3,26 +3,37 @@ import { Facebook, Mail, Phone, MapPin, Github } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 
-
 const Footer = () => {
-
   const { pathname } = useLocation();
   
-  const hideTextRoutes = ['/player', '/onboarding', '/profile'];
+  const hideTextRoutes =['/player', '/onboarding', '/profile'];
   const hideText = hideTextRoutes.some(route => pathname.startsWith(route));
 
+  const lowerMoonRoutes = ['/player', '/profile'];
+  const isMoonLowered = lowerMoonRoutes.some(route => pathname.startsWith(route));
 
   return (
     <motion.footer 
       initial={{ opacity: 0, y: 200, scale: 1  }} 
       animate={{ opacity: 1, y: 0, scale: 1 }} 
       transition={{ duration: 2.6, ease: "easeOut" }}
-      className="w-full relative z-20  pt-30 pb-10 bg-gradient-to-b from-transparent via-black/10 to-black text-gray-300 "
+      className="w-full relative z-20 pt-30 pb-10 bg-gradient-to-b from-transparent via-black/10 to-black text-gray-300 "
     >
       
-      <div className="absolute left-1/2 -translate-x-1/2 -top-24 md:-top-44 pointer-events-none drop-shadow-[0_0_30px_rgba(255,255,255,0.6)]">
+      <motion.div 
+        initial={{ x: "-50%", y: 0 }}
+        animate={{ 
+            x: "-50%", 
+            y: isMoonLowered ? 16 : 0 
+        }}
+        transition={{ 
+            type: "spring", stiffness: 100, damping: 20 
+        }}
+        //  -translate-x-1/2 to  x: "-50%"
+        className="absolute left-1/2 -top-24 md:-top-44 pointer-events-none drop-shadow-[0_0_30px_rgba(255,255,255,0.6)]"
+      >
         <img src="/moon2.png" alt="Moon" className="w-48 md:w-190 opacity-90" aria-hidden="true" />
-      </div>
+      </motion.div>
 
       
       <div className={`container mx-auto px-12 relative z-10 transition-opacity duration-300 ${
@@ -70,19 +81,14 @@ const Footer = () => {
           </div>
           
         </div>
-        
-        
       </div>
       
-
       <div className="mt-8 pt-8 border-t border-white/10 text-center text-xs opacity-50">
-          © 2025 MindMelody Project. All rights reserved.
-        </div>
+          © 2026 MindMelody Project. All rights reserved.
+      </div>
       
     </motion.footer>
   );
 };
 
 export default Footer;
-
-

@@ -8,7 +8,9 @@ import TabStats from '../components/profile/TabStats';
 import TabDiary from '../components/profile/TabDiary';
 import TabTherapy from '../components/profile/TabTherapy';
 
-const AVAILABLE_AVATARS = [
+import { useToast } from '../components/ToastContext';
+
+const INTERNAL_AVATARS = [
   '/avatars/av6.png',
   '/avatars/av5.png',
   '/avatars/av2.png',
@@ -26,11 +28,16 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState('info'); 
   const [showAvatarModal, setShowAvatarModal] = useState(false);
 
+  const [availableAvatars, setAvailableAvatars] = useState(INTERNAL_AVATARS);
+
+  const toast = useToast();
+
+
   const [userData, setUserData] = useState({
     name: '',
     email: '...',
     age: '',
-    avatar: AVAILABLE_AVATARS[0],
+    avatar: INTERNAL_AVATARS[0],
     likedGenres: [],
     dislikedGenres: []
   });
@@ -46,7 +53,7 @@ const Profile = () => {
     const fetchProfile = async () => {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       if (!token) {
-          navigate('/login'); // Chưa đăng nhập thì đuổi ra login
+          navigate('/login'); 
           return;
       }
 
@@ -65,6 +72,11 @@ const Profile = () => {
             likedGenres: data.music_preferences?.liked_genres || [],
             dislikedGenres: data.music_preferences?.disliked_genres || []
           });
+
+          if (loadedAvatar.startsWith('http') && !INTERNAL_AVATARS.includes(loadedAvatar)) {
+             setAvailableAvatars([loadedAvatar, ...INTERNAL_AVATARS]);
+          }
+
           const storage = localStorage.getItem('token') ? localStorage : sessionStorage;
             storage.setItem('avatar', loadedAvatar);
             storage.setItem('email', data.email);
@@ -110,10 +122,12 @@ const Profile = () => {
             const storage = localStorage.getItem('token') ? localStorage : sessionStorage;
             storage.setItem('displayName', data.display_name || data.username);
             window.dispatchEvent(new Event('profileUpdated'));
+
+            toast.success("Đã cập nhật thông tin cá nhân.");
         }
     } catch (err) {
         console.error("Lỗi lưu dữ liệu:", err);
-        alert("Có lỗi xảy ra khi lưu dữ liệu!");
+        toast.error("Lỗi cập nhật hồ sơ. Vui lòng thử lại.");
     }
   };
 
@@ -121,6 +135,7 @@ const Profile = () => {
     localStorage.clear();
     sessionStorage.clear();
     navigate('/');
+    toast.info("Đã đăng xuất an toàn.");
   };
 
   const handleAvatarChange = async (newAvatar) => {
@@ -134,11 +149,13 @@ const Profile = () => {
 
         if (!res.ok) {
             console.error("Backend từ chối lưu avatar!");
+            toast.error("Không thể thay đổi ảnh đại diện.");
             return;
         }
 
         setUserData(prev => ({ ...prev, avatar: newAvatar }));
         setShowAvatarModal(false);
+        toast.success("Đổi ảnh đại diện thành công.");
 
         const storage = localStorage.getItem('token') ? localStorage : sessionStorage;
         storage.setItem('avatar', newAvatar);
@@ -260,7 +277,7 @@ const Profile = () => {
                     </div>
 
                     <div className="p-8 grid grid-cols-3 md:grid-cols-4 gap-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
-                        {AVAILABLE_AVATARS.map((avatar, index) => {
+                        {availableAvatars.map((avatar, index) => {
                             const isSelected = userData.avatar === avatar;
                             return (
                                 <motion.div 
