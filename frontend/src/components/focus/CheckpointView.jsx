@@ -102,15 +102,11 @@ const CheckpointView = ({ latestResult, latestPlaylist, onUseOldResult, onTakeNe
         
         <motion.p variants={itemVariants} className="text-gray-300 text-sm text-center mb-5 leading-relaxed max-w-xl">
           {isSevere 
-            ? "Context." 
+            ? "Mình nhận thấy bạn đang trong thạng thái tâm lý nặng, hãy bấm nút SOS ở thanh điều hướng để nhận hotline nhé." 
             : "Bạn muốn tiếp tục từ lần trước hay bắt đầu đánh giá lại hôm nay?"}
         </motion.p>
 
-        {isSevere && (
-            <motion.div variants={itemVariants} className="bg-rose-500/10 border border-rose-500/20 px-4 py-2 rounded-xl text-xs text-rose-300 flex items-center gap-2 mb-6">
-                <Phone className="w-4 h-4" /> Hotline Hỗ trợ Tâm lý Quốc gia: <b>###</b>
-            </motion.div>
-        )}
+        
 
         <motion.div variants={itemVariants} className="flex flex-wrap justify-center gap-2 mb-7">
           {[
