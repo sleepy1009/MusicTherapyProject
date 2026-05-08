@@ -216,7 +216,7 @@ const CenterVisualizer = () => {
                      className="w-56 h-56 md:w-72 md:h-72 rounded-full bg-black/50 border-4 border-white/10 overflow-hidden relative group cursor-pointer transition-shadow duration-1000"
                      style={{ boxShadow: isPlaying ? `0 0 24px -4px ${dominantColor}` : '0 0 20px rgba(255,255,255,0.05)' }}
                 >
-                    <img src={getHighResImage(currentSong.image || currentSong.cover)} alt="Playing" className={`w-full h-full object-cover transition-all duration-1000 ${isPlaying ? 'opacity-100 scale-105' : 'opacity-60 grayscale-[50%]'}`} />
+                    <img src={getHighResImage(currentSong.image || currentSong.cover)} alt="Playing" className={`w-full h-full object-cover transition-all duration-1000 ${isPlaying ? 'opacity-100 scale-100' : 'opacity-60 grayscale-[50%] scale-96'}`} />
                     {isPlaying && (
                         <div className="absolute inset-0 flex items-center justify-center gap-1.5 mix-blend-screen">
                             {[1,2,3,4,5,6,7].map(i => (

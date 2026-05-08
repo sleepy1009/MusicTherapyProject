@@ -116,7 +116,7 @@ const ResultView = ({ answers, onLoginRequest, onContinue, onSaveSuccess }) => {
                       </p>
                       <div className="flex justify-center mb-6">
                           <div className="bg-rose-500/10 border border-rose-500/20 px-4 py-2 rounded-lg text-sm text-rose-300 flex items-center gap-2">
-                              <Phone className="w-4 h-4" /> Hotline Hỗ trợ Tâm lý Quốc gia: <b>###</b>
+                              <Phone className="w-4 h-4" /> Hotline Viện Sức khỏe Tâm thần Quốc gia (Viện SKTTQG): <b> (024) 3576 5344 hoặc 0984 104 115</b>
                           </div>
                       </div>
 

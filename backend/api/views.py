@@ -688,7 +688,7 @@ class ChatInteractView(APIView):
                 weights[track.genre] = round(new_w, 2)
                 prefs['genre_weights'] = weights
                 user.save()
-                print(f"🎯 AI tự động chấm điểm: Đã {action} thể loại {track.genre} (Trọng số mới: {new_w})")
+                print(f"AI tự động chấm điểm: Đã {action} thể loại {track.genre} (Trọng số mới: {new_w})")
 
         bot_msg = ChatMessage.objects.create(session=session, sender=ChatMessage.Sender.BOT, content=bot_response_text)
 

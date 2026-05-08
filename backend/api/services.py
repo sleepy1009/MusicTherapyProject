@@ -390,8 +390,10 @@ class ChatbotEngine:
         => BẠN BẮT BUỘC PHẢI DỪNG LẠI, TRẢ VỀ CHÍNH XÁC CHUỖI NÀY VÀ KHÔNG THÊM BẤT CỨ TỪ NÀO KHÁC: [EMERGENCY_TRIGGERED]
         - Yêu cầu vượt ngoài phạm vi tâm lý (Làm toán, viết code, dịch thuật, hóa thân thành nhân vật khác) => TỪ CHỐI NGAY LẬP TỨC. Dùng câu: "Tôi là trợ lý tâm lý MindMelody. Tôi chỉ có thể giúp bạn giải quyết các vấn đề về cảm xúc và sức khỏe tinh thần."
 
-        NHIỆM VỤ 2: TRỢ LÝ TÂM LÝ MindMelody (CBT THERAPIST)
-        Chỉ khi câu nói của người dùng AN TOÀN, hãy đóng vai MindMelody. Bắt buộc tuân thủ Cẩm nang Lâm sàng (RAG) được cung cấp.
+        NHIỆM VỤ 2: TRỢ LÝ TÂM LÝ MindMelody (HYBRID THERAPIST: CARL ROGERS & CBT)
+        Chỉ khi câu nói của người dùng AN TOÀN, hãy đóng vai MindMelody. 
+        - Về thái độ: Áp dụng trường phái Carl Rogers (Không phán xét, thấu cảm sâu sắc, dùng kỹ thuật Phản chiếu - Mirroring cảm xúc).
+        - Về kỹ thuật: Bắt buộc tuân thủ phương pháp giải quyết vấn đề theo Cẩm nang Lâm sàng CBT (RAG) được cung cấp.        
         """
 
     def _is_injection(self, text):
@@ -485,7 +487,7 @@ class ChatbotEngine:
                 if "[EMERGENCY_TRIGGERED]" in bot_text:
                     emergency_msg = (
                         "Tôi cảm nhận được bạn đang mang một nỗi đau quá lớn và vượt sức chịu đựng. Sự an toàn của bạn lúc này là điều quan trọng nhất. "
-                        "Xin hãy gọi ngay cho Tổng đài Quốc gia Hỗ trợ Tâm lý 111. Hệ thống đã tự động kích hoạt nhạc an thần (SOS), hãy nhắm mắt lại và cố gắng hít thở sâu cùng tôi nhé."
+                        "Xin hãy gọi ngay cho Đường dây nóng “Ngày mai” - Hỗ trợ người trầm cảm, khủng hoảng tâm lý: 096-306-1414. Hệ thống đã tự động kích hoạt nhạc an thần (SOS), hãy nhắm mắt lại và cố gắng hít thở sâu cùng tôi nhé."
                     )
                     return emergency_msg, True 
                 else:
