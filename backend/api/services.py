@@ -486,8 +486,10 @@ class ChatbotEngine:
 
                 if "[EMERGENCY_TRIGGERED]" in bot_text:
                     emergency_msg = (
-                        "Tôi cảm nhận được bạn đang mang một nỗi đau quá lớn và vượt sức chịu đựng. Sự an toàn của bạn lúc này là điều quan trọng nhất. "
-                        "Xin hãy gọi ngay cho Đường dây nóng “Ngày mai” - Hỗ trợ người trầm cảm, khủng hoảng tâm lý: 096-306-1414. Hệ thống đã tự động kích hoạt nhạc an thần (SOS), hãy nhắm mắt lại và cố gắng hít thở sâu cùng tôi nhé."
+                        "Tôi cảm nhận được bạn đang mang một nỗi đau quá lớn và vượt sức chịu đựng. Sự an toàn của bạn lúc này là điều quan trọng nhất. \n"
+                        "Đường dây nóng Ngày Mai: 096 306 1414 (Hỗ trợ thanh thiếu niên trầm cảm).\n "
+                        "Viện Sức khỏe Tâm thần Quốc gia: (024) 3576 5344 hoặc 0984 104 115.\n "
+                        "Hệ thống đã tự động kích hoạt nhạc nhẹ nhàng, hãy nhắm mắt lại và cố gắng hít thở sâu cùng tôi nhé."
                     )
                     return emergency_msg, True 
                 else:

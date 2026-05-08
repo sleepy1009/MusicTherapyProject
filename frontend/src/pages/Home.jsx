@@ -4,12 +4,17 @@ import ParticlesBackground from '../components/reactbits/ParticlesBackground';
 import { AnimatePresence, motion } from 'framer-motion';
 import HeroSection from '../components/HeroSection';
 import FocusOverlay from '../components/FocusOverlay';
+import { useDocumentTitle } from '../utils/useDocumentTitle';
+
 
 const Home = () => {
   const [isFocusMode, setIsFocusMode] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
+
+  useDocumentTitle('MindMelody');
+
 
   useEffect(() => {
       if (location.state?.autoStartTherapy || location.state?.autoStartTest) {

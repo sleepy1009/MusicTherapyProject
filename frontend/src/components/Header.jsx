@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LogIn, User, LogOut, Phone } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { LogIn, User, LogOut, Phone, AlertTriangle  } from 'lucide-react';
+import { motion, AnimatePresence  } from 'framer-motion';
 
 import { useToast } from './ToastContext'; 
 import { useConfirm } from './ConfirmContext'; 
@@ -31,6 +31,8 @@ const Header = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false); 
   const [displayName, setDisplayName] = useState('');
   const [userAvatar, setUserAvatar] = useState('/icon002.png'); 
+  const [showSOS, setShowSOS] = useState(false);
+  const sosButtonRef = useRef(null);
   
   const toast = useToast();
   const { confirm } = useConfirm();
@@ -53,6 +55,22 @@ const Header = () => {
       setUserAvatar('/icon002.png');
     }
   };
+
+  const sosDropdownRef = useRef(null);
+
+  useEffect(() => {
+      const handleClickOutside = (e) => {
+          if (
+              sosDropdownRef.current && !sosDropdownRef.current.contains(e.target) &&
+              sosButtonRef.current && !sosButtonRef.current.contains(e.target)
+          ) {
+              setShowSOS(false);
+          }
+      };
+
+      if (showSOS) document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showSOS]);
 
   useEffect(() => {
     updateUserInfo();
@@ -104,13 +122,15 @@ const Header = () => {
               </div>
             </Link>
 
-            <button 
-                className="hidden md:flex items-center gap-2 text-[#EB4C4C]/80 hover:text-[#EB4C4C] transition-colors text-sm font-medium px-3 py-1.5 rounded-full border border-[#EB4C4C]/30 hover:bg-[#EB4C4C]/10 cursor-pointer"
-                title="Hỗ trợ khẩn cấp"
-            >
-                <Phone className="w-4 h-4" />
-                <span>SOS</span>
-            </button>
+                <button 
+                  ref={sosButtonRef}
+                  onClick={() => setShowSOS(true)}
+                  className="hidden md:flex items-center gap-2 text-[#EB4C4C]/80 hover:text-[#EB4C4C] transition-colors text-sm font-medium px-3 py-1.5 rounded-full border border-[#EB4C4C]/30 hover:bg-[#EB4C4C]/10 cursor-pointer"
+              >
+                  <Phone size={16} className="animate-pulse" />
+                  <span className="hidden sm:inline">SOS</span>
+              </button>
+            
           </div>
 
           <div className="flex items-center gap-4">
@@ -172,6 +192,35 @@ const Header = () => {
 
         </div>
       </div>
+
+        <AnimatePresence>
+          {showSOS && (
+              <motion.div
+                  ref={sosDropdownRef}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                  className="absolute top-full left-44 mt-1 z-50 px-4"
+              >
+                  <div className="bg-zinc-900 border border-[#EB4C4C]/30 p-5 rounded-2xl w-[420px] shadow-2xl">
+                      <p className="flex justify-center text-gray-300 text-sm mb-3">
+                          Nếu cảm thấy tâm lý mình đang bất ổn, hãy liên hệ
+                      </p>
+                      <div className="space-y-2">
+                          <a href="tel:02435765344" className="flex items-center justify-between p-3 bg-[#EB4C4C]/5 rounded-xl hover:bg-[#EB4C4C]/10 transition border border-[#EB4C4C]/10">
+                              <span className="font-medium text-white text-sm">Viện SKTTQG</span>
+                              <span className="text-rose-400 font-bold text-xs">(024) 3576 5344 hoặc 0984 104 115</span>
+                          </a>
+                          <a href="tel:0963061414" className="flex items-center justify-between p-3 bg-[#EB4C4C]/5 rounded-xl hover:bg-[#EB4C4C]/10 transition border border-[#EB4C4C]/10">
+                              <span className="font-medium text-white text-sm">Đường dây nóng Ngày Mai</span>
+                              <span className="text-rose-400 font-bold text-xs">096 306 1414</span>
+                          </a>
+                      </div>
+                  </div>
+              </motion.div>
+          )}
+      </AnimatePresence>
     </motion.header>
   );
 };

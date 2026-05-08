@@ -4,6 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { User, Mail, Lock, AlertCircle, Star, UserPlus, Eye, EyeOff } from 'lucide-react';
 import ParticlesBackground from '../components/reactbits/ParticlesBackground';
 import { useGoogleLogin } from '@react-oauth/google';
+import { useDocumentTitle } from '../utils/useDocumentTitle';
+
+
 
 const Register = () => {
   const [username, setUsername] = useState('');
@@ -21,6 +24,8 @@ const Register = () => {
   const API = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
   const handleMouseEnter = () => setIsHovered(true);
+
+  useDocumentTitle('Đăng ký');
   
   const handleMouseLeave = () => {
     setIsHovered(false);

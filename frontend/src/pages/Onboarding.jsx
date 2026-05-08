@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { User, Calendar, Music, AlertOctagon, ArrowRight, ArrowLeft, CheckCircle2, Star } from 'lucide-react';
 import ParticlesBackground from '../components/reactbits/ParticlesBackground';
 import { useToast } from '../components/ToastContext';
+import { useDocumentTitle } from '../utils/useDocumentTitle';
+
 
 const MUSIC_GENRES = {
   'pop_group': 'Pop / Nhạc trẻ',
@@ -29,6 +31,8 @@ const Onboarding = () => {
 
   const toast = useToast();
   
+  useDocumentTitle('Đăng ký');
+
 
   const API = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 

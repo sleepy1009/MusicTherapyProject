@@ -14,6 +14,9 @@ import MediaController from '../components/player/MediaController';
 import ChatPanel from '../components/player/ChatPanel';
 import { useToast } from '../components/ToastContext';
 
+import { useDocumentTitle } from '../utils/useDocumentTitle';
+
+
 const PlayerLayout = () => {
     const { 
         playlistData, currentSong, volume, isMuted,
@@ -25,6 +28,12 @@ const PlayerLayout = () => {
     if (!playlistData || playlistData.length === 0) {
         return <Navigate to="/" replace />;
     }
+    
+    const title = currentSong?.title && currentSong?.artist
+        ? `${currentSong.title} — ${currentSong.artist}`
+        : 'Player';
+    useDocumentTitle(title);
+
 
     const chatWidth = showChat && !rightPanelMode ? 778 : 486;  // 1.8 of R case | 1800px * 27%
     const rightWidth = rightPanelMode && !showChat ? 680 : 486; // 1.6 of R case | 1800px * 27%

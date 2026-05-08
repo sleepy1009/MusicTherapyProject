@@ -5,6 +5,8 @@ import { LogIn, Mail, Lock, AlertCircle, Star, Eye, EyeOff } from 'lucide-react'
 import ParticlesBackground from '../components/reactbits/ParticlesBackground';
 import { useToast } from '../components/ToastContext';
 import { useGoogleLogin } from '@react-oauth/google';
+import { useDocumentTitle } from '../utils/useDocumentTitle';
+
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -17,6 +19,8 @@ const Login = () => {
 
   const toast = useToast();
   
+  useDocumentTitle('Đăng nhập');
+
   
   const [rememberMe, setRememberMe] = useState(true);
   

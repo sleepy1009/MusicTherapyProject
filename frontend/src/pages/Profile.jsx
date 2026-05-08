@@ -10,6 +10,9 @@ import TabTherapy from '../components/profile/TabTherapy';
 
 import { useToast } from '../components/ToastContext';
 
+import { useDocumentTitle } from '../utils/useDocumentTitle';
+
+
 const INTERNAL_AVATARS = [
   '/avatars/av6.png',
   '/avatars/av5.png',
@@ -31,6 +34,8 @@ const Profile = () => {
   const [availableAvatars, setAvailableAvatars] = useState(INTERNAL_AVATARS);
 
   const toast = useToast();
+
+  useDocumentTitle('Hồ sơ');
 
 
   const [userData, setUserData] = useState({
