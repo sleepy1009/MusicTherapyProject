@@ -271,6 +271,9 @@ class MusicTherapyEngine:
     
     def fetch_youtube_details(self, tracks):
         def get_yt_info(track):
+            if track.get('youtube_id') and track.get('youtube_id') != "not_found":
+                return track
+
             query = f"{track['title']} {track['artist']} audio"
             try:
                 search_results = self.ytmusic.search(query, filter="songs", limit=1)
