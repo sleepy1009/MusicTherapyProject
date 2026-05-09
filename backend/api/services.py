@@ -362,7 +362,7 @@ class ChatbotEngine:
             raise ValueError("Lỗi: Không tìm thấy GEMINI_API_KEY.")
             
         self.client = genai.Client(api_key=api_key)
-        self.model_name = 'gemini-3-flash-preview' # Gemini 3 Flash Preview
+        self.model_name = 'gemini-2.5-flash' # Gemini 3 Flash Preview, gemini-2.5-flash
         
         # FILE RAG 
         base_dir = os.path.dirname(os.path.abspath(__file__))
