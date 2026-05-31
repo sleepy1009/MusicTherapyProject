@@ -44,19 +44,19 @@ export const ConfirmProvider = ({ children }) => {
 
     const styles = {
         danger: {
-            bgLayer: 'bg-rose-500', 
+            bgLayer: 'bg-rose-500/90', 
             icon: <Trash2 size={28} />,
             iconBg: 'bg-rose-100 text-rose-500',
             btnBg: 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/30'
         },
         warning: {
-            bgLayer: 'bg-yellow-400',
+            bgLayer: 'bg-yellow-400/90',
             icon: <AlertCircle size={28} />,
             iconBg: 'bg-yellow-50 text-yellow-600',
             btnBg: 'bg-yellow-400 hover:bg-yellow-500 text-gray-900 shadow-yellow-500/30'
         },
         info: {
-            bgLayer: 'bg-[#41A67E]',
+            bgLayer: 'bg-[#41A67E]/90',
             icon: <HelpCircle size={28} />,
             iconBg: 'bg-[#e2f3ed] text-[#41A67E]',
             btnBg: 'bg-[#41A67E] hover:bg-[#358a68] text-white shadow-[#41A67E]/30'
@@ -94,7 +94,7 @@ export const ConfirmProvider = ({ children }) => {
                                 exit={{ scale: 0.9, y: 20 }}
                                 transition={{ duration: 0.2 }}
                                 onClick={(e) => e.stopPropagation()} 
-                                className="relative bg-[#F3F4F4] border border-white p-8 rounded-[28px] shadow-2xl text-center z-10"
+                                className="relative bg-[#F3F4F4]/94 border border-white p-8 rounded-[28px] shadow-2xl text-center z-10"
                             >
                                 <button onClick={handleCancel} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition-colors">
                                     <X size={20} />

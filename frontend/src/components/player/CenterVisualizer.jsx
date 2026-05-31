@@ -36,36 +36,62 @@ export const useDominantColor = (imageUrl) => {
 
 export const MarqueeText = ({ text, className, active = true }) => { 
     const containerRef = useRef(null);
-    const textRef = useRef(null);
     const [isOverflow, setIsOverflow] = useState(false);
     const [duration, setDuration] = useState(10);
+
     useEffect(() => {
         const checkOverflow = () => {
-            if (!containerRef.current || !textRef.current) return;
-            const clone = textRef.current.cloneNode(true);
-            clone.style.cssText = 'position:absolute;visibility:hidden;animation:none;white-space:nowrap;width:max-content';
-            document.body.appendChild(clone);
-            const textWidth = clone.scrollWidth;
-            document.body.removeChild(clone);
-            const containerWidth = containerRef.current.clientWidth;
-            if (textWidth > containerWidth) { setIsOverflow(true); setDuration(Math.max(textWidth / 20, 12)); } 
-            else { setIsOverflow(false); }
+            if (!containerRef.current) return;
+            const container = containerRef.current;
+
+            const measureSpan = document.createElement('span');
+            measureSpan.style.cssText = 'position:absolute; visibility:hidden; white-space:nowrap; width:max-content;';
+            measureSpan.innerText = text;
+
+            container.appendChild(measureSpan);
+            const textWidth = measureSpan.getBoundingClientRect().width;
+            container.removeChild(measureSpan);
+
+            const containerWidth = container.clientWidth;
+
+            if (textWidth > containerWidth) { 
+                setIsOverflow(true); 
+                setDuration(Math.max(textWidth / 30, 8)); 
+            } 
+            else { 
+                setIsOverflow(false); 
+            }
         };
+
         checkOverflow();
         const observer = new ResizeObserver(checkOverflow);
         if (containerRef.current) observer.observe(containerRef.current);
         return () => observer.disconnect();
     }, [text]);
-    const GAP = '120px';
+
+    const GAP = '120px'; 
+
     return (
         <div ref={containerRef} className={`w-full overflow-hidden flex ${!isOverflow ? 'justify-center' : ''} ${className}`}>
-            <div ref={textRef} className={`whitespace-nowrap flex items-center w-max ${isOverflow && active ? 'animate-marquee' : ''}`} style={{ animationDuration: `${duration}s` }}>
+            <motion.div 
+                className="whitespace-nowrap flex items-center w-max"
+                animate={isOverflow && active ? { x: [0, "-50%"] } : { x: 0 }}
+                transition={{
+                    duration: duration,
+                    ease: "linear",
+                    repeat: isOverflow && active ? Infinity : 0,
+                    repeatType: "loop",
+                    delay: 3,         
+                    repeatDelay: 3    
+                }}
+            >
                 <span style={{ paddingRight: isOverflow && active ? GAP : 0 }}>{text}</span>
                 {isOverflow && active && <span style={{ paddingRight: GAP }}>{text}</span>}
-            </div>
+            </motion.div>
         </div>
     );
 };
+
 
 const CenterVisualizer = () => {
     const { 
@@ -129,10 +155,7 @@ const CenterVisualizer = () => {
 
     return (
         <div className="flex-1 flex flex-col items-center relative">
-            <style dangerouslySetInnerHTML={{__html: `
-                @keyframes marquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
-                .animate-marquee { animation-name: marquee; animation-timing-function: linear; animation-iteration-count: infinite; }
-            `}} />
+            
 
             <div className="h-10 w-full flex items-center justify-center mt-2 absolute -top-14">
                 <AnimatePresence mode="wait">

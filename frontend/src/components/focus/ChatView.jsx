@@ -7,8 +7,21 @@ import TypingIndicator from './TypingIndicator';
 import { DASS21_QUESTIONS, ANSWERS } from '../../utils/dass21_data';
 
 const ChatView = ({ onFinish }) => {
+  
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({});
+  
+  
+  /*
+  // fate/strange fake(data)   
+  const mockAnswers = DASS21_QUESTIONS.reduce((acc, q) => {
+      acc[q.id] = 1; 
+      return acc;
+  }, {});
+  const [currentIndex, setCurrentIndex] = useState(DASS21_QUESTIONS.length);
+  const [answers, setAnswers] = useState(mockAnswers);
+  */
+
   const [messages, setMessages] = useState([]); 
   const [isTyping, setIsTyping] = useState(true); // cau 1
   const [showOptions, setShowOptions] = useState(false);

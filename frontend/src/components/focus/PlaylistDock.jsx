@@ -1,13 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Music, RefreshCw, PlayCircle } from 'lucide-react';
+import { Music, RefreshCw, PlayCircle, Loader2 } from 'lucide-react';
 
 const PlaylistDock = ({ selectedCards, isFinished, onRestart, onStartListening }) => {
+  const [isStarting, setIsStarting] = useState(false);
+
+  const handleStart = () => {
+      setIsStarting(true);
+      setTimeout(() => {
+          onStartListening();
+      }, 800); 
+  };
+
+
   return (
     <motion.div 
       layout
       className={`
-        bg-white/5 border border-white/20  rounded-3xl  p-2 flex flex-col
+        bg-white/5 border border-white/20 rounded-3xl p-2 flex flex-col
         transition-all duration-700 ease-in-out
         ${isFinished 
             ? 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-md h-auto z-50 shadow-[0_0_60px_-4px_rgba(158,211,220,0.4)]' 
@@ -72,15 +82,22 @@ const PlaylistDock = ({ selectedCards, isFinished, onRestart, onStartListening }
          >
              <button 
                 onClick={onRestart}
-                className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-medium transition flex items-center justify-center gap-2"
+                disabled={isStarting}
+                className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-medium transition flex items-center justify-center gap-2 disabled:opacity-50"
              >
                 <RefreshCw className="w-4 h-4" /> Tạo lại
              </button>
+             
              <button 
-                onClick={() => onStartListening()}
-                className="flex-[2] py-3 bg-[#9ED3DC]/80 hover:bg-[#9ED3DC]/90 text-white rounded-xl text-sm font-bold shadow-sm shadow-[#9ED3DC]/30 transition flex items-center justify-center gap-2"
+                onClick={handleStart}
+                disabled={isStarting}
+                className="flex-[2] py-3 bg-[#9ED3DC]/80 hover:bg-[#9ED3DC]/90 text-white rounded-xl text-sm font-bold shadow-sm shadow-[#9ED3DC]/30 transition flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
              >
-                <PlayCircle className="w-5 h-5" /> Bắt đầu nghe
+                {isStarting ? (
+                    <><Loader2 className="w-5 h-5 animate-spin text-black" /> <span className="text-black">Đang chuẩn bị...</span></>
+                ) : (
+                    <><PlayCircle className="w-5 h-5 text-black" /> <span className="text-black">Bắt đầu nghe</span></>
+                )}
              </button>
          </motion.div>
       )}

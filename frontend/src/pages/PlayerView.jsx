@@ -15,6 +15,8 @@ import ChatPanel from '../components/player/ChatPanel';
 import { useToast } from '../components/ToastContext';
 
 import { useDocumentTitle } from '../utils/useDocumentTitle';
+import { useQuery } from '@tanstack/react-query'; 
+import PlayerSkeleton from '../components/player/PlayerSkeleton';
 import SpaceErrorView from '../views/SpaceErrorView';
 
 const PlayerLayout = () => {
@@ -31,12 +33,11 @@ const PlayerLayout = () => {
     
     const title = currentSong?.title && currentSong?.artist
         ? `${currentSong.title} — ${currentSong.artist}`
-        : 'Player';
+        : 'MindMelody Player';
     useDocumentTitle(title);
 
-
-    const chatWidth = showChat && !rightPanelMode ? 778 : 486;  // 1.8 of R case | 1800px * 27%
-    const rightWidth = rightPanelMode && !showChat ? 680 : 486; // 1.6 of R case | 1800px * 27%
+    const chatWidth = showChat && !rightPanelMode ? 778 : 486;  
+    const rightWidth = rightPanelMode && !showChat ? 680 : 486; 
 
     const toast = useToast();
     const [playlistHeaderClicks, setPlaylistHeaderClicks] = useState(0);
@@ -70,7 +71,7 @@ const PlayerLayout = () => {
         if (next >= 5) {
             setShowPlaylistDebug(true); 
             setPlaylistHeaderClicks(0);
-            toast.info("Đã kích hoạt.");
+            toast.info("Đã kích hoạt chế độ NCKH.");
         }
     };
 
@@ -112,9 +113,7 @@ const PlayerLayout = () => {
                         {showChat && (
                             <motion.div initial={{ opacity: 0, width: 0, x: -50 }} animate={{ opacity: 1, width: chatWidth, x: 0 }} exit={{ opacity: 0, width: 0, x: -50 }} transition={{ duration: 0.4, ease: "easeInOut" }}
                                 className="h-full min-h-[440px] bg-white/5 border border-white/20 rounded-3xl overflow-hidden flex flex-col backdrop-blur-sm flex-shrink-0">
-                                
                                 <ChatPanel />
-                                
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -135,7 +134,6 @@ const PlayerLayout = () => {
                                             className="p-4 border-b border-white/10 font-out-text text-[#9ED3DC] flex items-center justify-between cursor-pointer select-none"
                                         >
                                             <div className="flex items-center gap-2"><Music size={18} /> Danh sách phát</div>
-                                            
                                             {showPlaylistDebug && (
                                                 <motion.button 
                                                     initial={{ scale: 0 }} animate={{ scale: 1 }}
@@ -163,7 +161,6 @@ const PlayerLayout = () => {
                 </div>
             </div>
             
-
             <MediaController />
         </div>
     );
@@ -171,21 +168,47 @@ const PlayerLayout = () => {
 
 const PlayerView = () => {
     const location = useLocation();
-    const initialPlaylist = location.state?.playlist || [];
-    const mode = location.state?.mode || 'therapy';
-    const initialSessionId = location.state?.sessionId || null;
+    const API = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+    
+    const statePlaylist = location.state?.playlist || [];
+    const stateMode = location.state?.mode || 'therapy';
+    const stateSessionId = location.state?.sessionId || null;
 
-    const { data, isLoading, isError } = useQuery({
-        queryKey: ['getPlaylist'],
-        queryFn: fetchPlaylistFromBackend
+    const { data: fetchedData, isLoading: isFetching, isError } = useQuery({
+        queryKey: ['latestSession', stateSessionId],
+        queryFn: async () => {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const res = await fetch(`${API}/users/sessions/`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error('Network error');
+            return res.json();
+        },
+        enabled: statePlaylist.length === 0, 
     });
 
+    const [isSimulating, setIsSimulating] = useState(true);
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setIsSimulating(false);
+        }, 1500); 
+        return () => clearTimeout(timer);
+    }, []);
+
+    const isLoading = isFetching || isSimulating;
+
+    if (isLoading) return <PlayerSkeleton />;
     if (isError) return <SpaceErrorView type="500" />;
-    
-    if (isLoading) return <div>Đang kết nối vũ trụ...</div>;
+
+    const finalPlaylist = statePlaylist.length > 0 ? statePlaylist : (fetchedData?.tracks || []);
+    const finalSessionId = stateSessionId || fetchedData?.id;
+
+    if (!finalPlaylist || finalPlaylist.length === 0) {
+        return <Navigate to="/" replace />;
+    }
 
     return (
-        <PlayerProvider initialPlaylist={initialPlaylist} mode={mode} initialSessionId={initialSessionId}>
+        <PlayerProvider initialPlaylist={finalPlaylist} mode={stateMode} initialSessionId={finalSessionId}>
             <PlayerLayout />
         </PlayerProvider>
     );
