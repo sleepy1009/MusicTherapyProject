@@ -15,7 +15,7 @@ import ChatPanel from '../components/player/ChatPanel';
 import { useToast } from '../components/ToastContext';
 
 import { useDocumentTitle } from '../utils/useDocumentTitle';
-
+import SpaceErrorView from '../views/SpaceErrorView';
 
 const PlayerLayout = () => {
     const { 
@@ -174,6 +174,15 @@ const PlayerView = () => {
     const initialPlaylist = location.state?.playlist || [];
     const mode = location.state?.mode || 'therapy';
     const initialSessionId = location.state?.sessionId || null;
+
+    const { data, isLoading, isError } = useQuery({
+        queryKey: ['getPlaylist'],
+        queryFn: fetchPlaylistFromBackend
+    });
+
+    if (isError) return <SpaceErrorView type="500" />;
+    
+    if (isLoading) return <div>Đang kết nối vũ trụ...</div>;
 
     return (
         <PlayerProvider initialPlaylist={initialPlaylist} mode={mode} initialSessionId={initialSessionId}>

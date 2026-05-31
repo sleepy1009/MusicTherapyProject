@@ -12,17 +12,31 @@ import { ToastProvider } from './components/ToastContext';
 import { ConfirmProvider } from './components/ConfirmContext';
 import ConsentModal from './components/ConsentModal';
 import './styles/galaxy.css'; 
+import SpaceErrorView from './views/SpaceErrorView';
+
 
 const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [showConsent, setShowConsent] = useState(false);
 
+  const [hasServerError, setHasServerError] = useState(false);
+
   const API = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
   const isPlayerPage = location.pathname === '/player';
   const isAuthPage = ['/login', '/register', '/onboarding'].includes(location.pathname);
   const isAccPage = ['/profile'].includes(location.pathname);
+
+  useEffect(() => {
+    const handleGlobalError = (event) => {
+      console.error("Phát hiện lỗi Server:", event.detail);
+      setHasServerError(true);
+    };
+
+    window.addEventListener('globalApiError', handleGlobalError);
+    return () => window.removeEventListener('globalApiError', handleGlobalError);
+  }, []);
 
 
   const checkConsentStatus = async () => {
@@ -80,22 +94,29 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen galaxy-bg font-sans flex flex-col text-white">
-      
       <Header />
       
       <main className={`flex-grow ${!isAuthPage && isAccPage ? 'pb-[48px] md:pb-[96px]' : ''}`}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/player" element={<PlayerView />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/Onboarding" element={<Onboarding />} />
-          <Route path="/profile" element={<Profile /> } />
-        </Routes>
+        {hasServerError ? (
+          <SpaceErrorView 
+            type="500" 
+            onAction={() => setHasServerError(false)} 
+          />
+        ) : (
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/player" element={<PlayerView />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/Onboarding" element={<Onboarding />} />
+            <Route path="/profile" element={<Profile /> } />
+            
+            <Route path="*" element={<SpaceErrorView type="404" />} />
+          </Routes>
+        )}
       </main>
       
       {!isAuthPage && <Footer />}
-
 
       <ConsentModal 
         isOpen={showConsent} 
