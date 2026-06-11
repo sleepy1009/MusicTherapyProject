@@ -109,7 +109,7 @@ const CenterVisualizer = () => {
     const [hasClickedPlaylist, setHasClickedPlaylist] = useState(false);
     const [hasClickedDiary, setHasClickedDiary] = useState(false);
 
-    const [showPreMood, setShowPreMood] = useState(mode === 'therapy');
+    //const [showPreMood, setShowPreMood] = useState(mode === 'therapy');
 
     const dominantColor = useDominantColor(currentSong.image || currentSong.cover);
 

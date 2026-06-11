@@ -6,7 +6,19 @@ import { useToast } from '../ToastContext';
 import { useConfirm } from '../ConfirmContext';
 
 const ChatPanel = () => {
-    const { API, playerTarget, triggerEmergencySOS, fetchDiary, currentSong } = usePlayer();
+    const { 
+        API, playerTarget, triggerEmergencySOS, fetchDiary, currentSong,
+        showPreMood, setShowPreMood, showPostMood, setShowPostMood,
+        sessionId, unreadCount, setUnreadCount
+    } = usePlayer();
+
+    const moodOptions = [
+        { value: 1, label: 'Bình thường' },
+        { value: 2, label: 'Nhẹ' },
+        { value: 3, label: 'Vừa' },
+        { value: 4, label: 'Nặng' },
+        { value: 5, label: 'Rất nặng' }
+    ];
     
     const [sessions, setSessions] = useState([]);
     const [currentSessionId, setCurrentSessionId] = useState(null);
@@ -25,7 +37,6 @@ const ChatPanel = () => {
 
     const messagesEndRef = useRef(null);
 
-    const [unreadCount, setUnreadCount] = useState(0);
 
     const userAvatar = localStorage.getItem('avatar') || sessionStorage.getItem('avatar') || '/avatars/av6.png';
 
@@ -70,6 +81,71 @@ const ChatPanel = () => {
     useEffect(() => {
         if (isSidebarOpen) setUnreadCount(0);
     }, [isSidebarOpen]);
+
+    // (Pre-Mood)
+    useEffect(() => {
+        if (showPreMood && messages.length > 0) {
+            const hasPreMsg = messages.some(m => m.id === 'sys-pre-mood');
+            if (!hasPreMsg) {
+                setMessages(prev => [...prev, {
+                    id: 'sys-pre-mood', sender: 'BOT',
+                    content: 'Giai điệu trị liệu đã bắt đầu. Hãy đánh giá mức độ căng thẳng hiện tại của bạn để tôi theo dõi nhé.',
+                    isSystemPrompt: true, moodType: 'before'
+                }]);
+            }
+        }
+    }, [showPreMood, messages.length]);
+
+    // (Post-Mood)
+    useEffect(() => {
+        if (showPostMood && messages.length > 0) {
+            const hasPostMsg = messages.some(m => m.id === 'sys-post-mood');
+            if (!hasPostMsg) {
+                setMessages(prev => [...prev, {
+                    id: 'sys-post-mood', sender: 'BOT',
+                    content: 'Giai điệu trị liệu đã khép lại. Hãy nhắm mắt hít thở sâu, và cho tôi biết mức độ căng thẳng của bạn lúc này.',
+                    isSystemPrompt: true, moodType: 'after'
+                }]);
+            }
+        }
+    }, [showPostMood, messages.length]);
+
+    const handleMoodSubmit = async (moodValue, moodLabel, type) => {
+        setMessages(prev => prev.filter(m => !m.isSystemPrompt));
+        if (type === 'before') setShowPreMood(false);
+        if (type === 'after') setShowPostMood(false);
+
+        setMessages(prev => [...prev, { id: Date.now(), sender: 'USER', content: `Cảm xúc hiện tại: ${moodLabel}` }]);
+        setIsLoading(true);
+
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        const payload = type === 'before' ? { mood_before: moodValue } : { mood_after: moodValue };
+
+        try {
+            if (sessionId) {
+                await fetch(`${API}/users/session-mood/${sessionId}/`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(payload)
+                });
+            }
+
+            const hiddenPrompt = type === 'before' 
+                ? `[HỆ THỐNG]: User vừa báo cáo trạng thái đầu phiên là "${moodLabel}". Hãy nhắn 1 câu ngắn gọn động viên họ tận hưởng âm nhạc.`
+                : `[HỆ THỐNG]: User báo cáo trạng thái cuối phiên là "${moodLabel}". Hãy động viên ngắn gọn và kết thúc phiên.`;
+
+            const res = await fetch(`${API}/users/chat/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ content: hiddenPrompt, session_id: currentSessionId, is_system_event: true })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setMessages(prev => [...prev, data.reply]);
+            }
+        } catch (err) {} finally { setIsLoading(false); }
+    };
 
 
     const handleCreateSession = async () => {
@@ -334,6 +410,26 @@ const ChatPanel = () => {
                                 msg.sender === 'USER' ? 'bg-[#41A67E]/80 text-white rounded-tr-none' : 'bg-white/10 text-gray-200 border border-white/5 rounded-tl-none backdrop-blur-sm'
                             }`}>
                                 {msg.content}
+                                {msg.isSystemPrompt && (
+                                    <div className="mt-4 flex flex-col gap-2 w-full border-t border-white/10 pt-4">
+                                        <div className="flex justify-center gap-2 w-full">
+                                            {moodOptions.slice(0, 2).map(opt => (
+                                                <button key={opt.value} onClick={() => handleMoodSubmit(opt.value, opt.label, msg.moodType)}
+                                                    className="flex-1 py-2 px-1 bg-white/5 hover:bg-[#41A67E] border border-white/20 hover:border-[#41A67E] rounded-xl text-[11px] font-medium text-white transition-all text-center">
+                                                    {opt.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <div className="flex justify-center gap-2 w-full">
+                                            {moodOptions.slice(2, 5).map(opt => (
+                                                <button key={opt.value} onClick={() => handleMoodSubmit(opt.value, opt.label, msg.moodType)}
+                                                    className="flex-1 py-2 px-1 bg-white/5 hover:bg-[#41A67E] border border-white/20 hover:border-[#41A67E] rounded-xl text-[11px] font-medium text-white transition-all text-center">
+                                                    {opt.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </motion.div>
                     ))}

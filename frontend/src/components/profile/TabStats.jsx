@@ -214,7 +214,7 @@ const TabStats = () => {
 
                 
 
-                {/* 2. CHART ROW 2: TIME & GENRES (Giữ nguyên fake cho đến khi làm Player) */}
+                {/* 2. CHART ROW 2: TIME & GENRES */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 ">
                     <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-6">
                         <h3 className="text-base font-bold text-main_text flex items-center gap-2 mb-6">
@@ -251,7 +251,7 @@ const TabStats = () => {
                 </div>
 
 
-                {/* 1.5. CHART ĐƯỜNG CONG ISO (VŨ KHÍ SHOW-OFF) */}
+                {/* 1.5. CHART ĐƯỜNG CONG ISO */}
                 {isoCurveData.length > 0 && (
                     <div className="w-full bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-[0_0_20px_rgba(65,166,126,0.05)] mt-6 ">
                         <div className="flex flex-col md:flex-row md:items-center justify-between mb-2 gap-4">

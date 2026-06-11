@@ -46,6 +46,14 @@ export const PlayerProvider = ({ children, initialPlaylist, mode, initialSession
 
     const currentSong = playlistData[currentIndex] || {};
 
+    const [showPreMood, setShowPreMood] = useState(mode === 'therapy');
+
+    useEffect(() => {
+        if (showPreMood) {
+            setUnreadCount(prev => prev + 1);
+        }
+    }, []);
+
     useEffect(() => {
         setCurrentTime(0);
     }, [currentIndex]);
@@ -148,6 +156,7 @@ export const PlayerProvider = ({ children, initialPlaylist, mode, initialSession
             playerTarget?.seekTo(0); 
             if (mode === 'therapy' && !hasAskedPostMood.current) {
                 setShowPostMood(true);
+                setUnreadCount(prev => prev + 1);
                 hasAskedPostMood.current = true;
             }
         }
@@ -342,8 +351,9 @@ export const PlayerProvider = ({ children, initialPlaylist, mode, initialSession
         fetchDiary,
         triggerEmergencySOS,
         showPlaylistDebug, setShowPlaylistDebug,
+        showPreMood, setShowPreMood,
         showPostMood, setShowPostMood,
-        sessionId
+        sessionId, unreadCount, setUnreadCount
     };
 
     return (

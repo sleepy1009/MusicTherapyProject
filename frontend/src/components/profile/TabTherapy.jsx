@@ -347,7 +347,7 @@ const TabTherapy = () => {
               }}
               className="flex-1 py-2.5 rounded-xl font-bold text-xs transition-all bg-rose-500/20 hover:bg-rose-500/40 text-rose-300 flex items-center justify-center gap-1.5"
             >
-              <Brain className="w-4 h-4" /> Build Trị Liệu
+              <Brain className="w-4 h-4" /> Xây dựng Trị Liệu
             </button>
           </div>
         </motion.div>
