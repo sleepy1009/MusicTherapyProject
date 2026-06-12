@@ -8,14 +8,11 @@ class Command(BaseCommand):
     help = 'Tự động cào YouTube ID và Ảnh bìa cho kho nhạc SpotifyTrack'
 
     def handle(self, *args, **kwargs):
-        self.stdout.write("Khởi động Bot cào dữ liệu YouTube...")
-        ytmusic = YTMusic()
-        
+        ytmusic = YTMusic()      
         # Chỉ lấy những bài chưa có youtube_id
         tracks_to_process = SpotifyTrack.objects.filter(youtube_id__isnull=True)
         total = tracks_to_process.count()
         
-        self.stdout.write(f"Tìm thấy {total} bài hát cần cào data.")
         if total == 0:
             return
 

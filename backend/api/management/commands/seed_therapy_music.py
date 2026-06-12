@@ -2,7 +2,6 @@ from django.core.management.base import BaseCommand
 from api.models import Track
 
 class Command(BaseCommand):
-    help = 'Nạp 40 bài nhạc trị liệu làm Kích thích Âm thanh Mục tiêu (Target Stimuli)'
 
     def handle(self, *args, **kwargs):
         therapy_tracks = [
@@ -17,7 +16,7 @@ class Command(BaseCommand):
             {"spotify_id": "sos_calm_02", "title": "Electra", "artist": "Airstream", "youtube_id": "mXwFkHlJ5rA", "duration": "6:15", "valence": 0.5, "energy": 0.2, "tempo": 65.0},
             {"spotify_id": "sos_calm_03", "title": "Mellomaniac (Chill Out Mix)", "artist": "DJ Shah", "youtube_id": "5YQO1kY8yqU", "duration": "5:30", "valence": 0.5, "energy": 0.25, "tempo": 60.0},
             {"spotify_id": "sos_calm_04", "title": "Watermark", "artist": "Enya", "youtube_id": "NO5tb20qQnA", "duration": "2:25", "valence": 0.3, "energy": 0.15, "tempo": 65.0},
-            {"spotify_id": "sos_calm_05", "title": "Strawberry Swing", "artist": "Coldplay", "youtube_id": "Lb9X5jMofEo", "duration": "4:09", "valence": 0.6, "energy": 0.3, "tempo": 70.0},
+            {"spotify_id": "sos_calm_05", "title": "Strawberry Swing", "artist": "Coldplay", "youtube_id": "2niQPyZfykA", "duration": "4:09", "valence": 0.6, "energy": 0.3, "tempo": 70.0},
             {"spotify_id": "sos_calm_06", "title": "Please Don't Go", "artist": "Barcelona", "youtube_id": "CO1dDlyh_XQ", "duration": "3:17", "valence": 0.4, "energy": 0.2, "tempo": 65.0},
             {"spotify_id": "sos_calm_07", "title": "Pure Shores (Instrumental)", "artist": "All Saints", "youtube_id": "xG2QvH1M-y0", "duration": "4:28", "valence": 0.5, "energy": 0.3, "tempo": 68.0},
             # Trappe (2010) - Cardiovascular health synchronization
@@ -31,7 +30,16 @@ class Command(BaseCommand):
             {"spotify_id": "sos_calm_15", "title": "Nocturne Op. 9 No. 2", "artist": "Frederic Chopin", "youtube_id": "9E6b3swbnWg", "duration": "4:30", "valence": 0.4, "energy": 0.15, "tempo": 60.0},
             {"spotify_id": "sos_calm_16", "title": "Oltremare", "artist": "Ludovico Einaudi", "youtube_id": "R8MzHdW0jKw", "duration": "5:50", "valence": 0.4, "energy": 0.25, "tempo": 60.0},
             {"spotify_id": "sos_calm_17", "title": "Clair de Lune", "artist": "Claude Debussy", "youtube_id": "CvFH_6DNRCY", "duration": "5:30", "valence": 0.4, "energy": 0.1, "tempo": 60.0},
-
+            {"spotify_id": "sos_calm_18", "title": "Nuvole Bianche", "artist": "Ludovico Einaudi", "youtube_id": "QwNIcxEeB8k", "duration": "5:58", "valence": 0.3, "energy": 0.15, "tempo": 65.0},
+            {"spotify_id": "sos_calm_19", "title": "River Flows In You", "artist": "Yiruma", "youtube_id": "NPBCbTZWnq0", "duration": "3:08", "valence": 0.4, "energy": 0.2, "tempo": 65.0},
+            {"spotify_id": "sos_calm_20", "title": "Moonlight Sonata (1st Mvt)", "artist": "Ludwig van Beethoven", "youtube_id": "nze9DeEOO90", "duration": "6:00", "valence": 0.2, "energy": 0.1, "tempo": 55.0},
+            {"spotify_id": "sos_calm_21", "title": "Adagio for Strings", "artist": "Samuel Barber", "youtube_id": "23z4zduN_IQ", "duration": "8:00", "valence": 0.2, "energy": 0.1, "tempo": 50.0},
+            {"spotify_id": "sos_calm_22", "title": "Canon in D", "artist": "Johann Pachelbel", "youtube_id": "NlprozGcs80", "duration": "5:00", "valence": 0.5, "energy": 0.2, "tempo": 70.0},
+            {"spotify_id": "sos_calm_23", "title": "The Lark Ascending", "artist": "Ralph Vaughan Williams", "youtube_id": "HWPRIgO0BvE", "duration": "15:00", "valence": 0.3, "energy": 0.15, "tempo": 60.0},
+            {"spotify_id": "sos_calm_24", "title": "Experience", "artist": "Ludovico Einaudi", "youtube_id": "hN_q-_lNv4U", "duration": "5:15", "valence": 0.4, "energy": 0.3, "tempo": 75.0},
+            {"spotify_id": "sos_calm_25", "title": "Morning Promenade", "artist": "Edvard Grieg", "youtube_id": "O2gDFJWhXp8", "duration": "4:00", "valence": 0.5, "energy": 0.2, "tempo": 60.0},
+            {"spotify_id": "sos_calm_26", "title": "Gymnopédie No. 2", "artist": "Erik Satie", "youtube_id": "J4Ksz9cfbmw", "duration": "3:00", "valence": 0.4, "energy": 0.1, "tempo": 55.0},
+            {"spotify_id": "sos_calm_27", "title": "Gymnopédie No. 3", "artist": "Erik Satie", "youtube_id": "BvrLaHAkGbE", "duration": "2:30", "valence": 0.4, "energy": 0.1, "tempo": 55.0},
             # ==========================================
             # R2: UP-REGULATION TARGETS (Dành cho Trầm Cảm)
             # Cơ sở lý thuyết: Musical Mood Induction Procedure (MMIP) tạo hưng phấn (Elation).
@@ -58,7 +66,14 @@ class Command(BaseCommand):
             {"spotify_id": "sos_active_17", "title": "Flying Theme (E.T.)", "artist": "John Williams", "youtube_id": "O15x-B8PgeE", "duration": "3:45", "valence": 0.8, "energy": 0.7, "tempo": 115.0},
             {"spotify_id": "sos_active_18", "title": "Pomp and Circumstance March No. 1", "artist": "Edward Elgar", "youtube_id": "moL4MkJ-aLk", "duration": "6:00", "valence": 0.8, "energy": 0.75, "tempo": 110.0},
             {"spotify_id": "sos_active_19", "title": "Awake", "artist": "Tycho", "youtube_id": "7xF0vN-Gk2k", "duration": "4:43", "valence": 0.75, "energy": 0.75, "tempo": 110.0},
-            {"spotify_id": "sos_active_20", "title": "A Walk", "artist": "Tycho", "youtube_id": "mehLx_Fjv_c", "duration": "5:16", "valence": 0.7, "energy": 0.7, "tempo": 105.0}
+            {"spotify_id": "sos_active_20", "title": "A Walk", "artist": "Tycho", "youtube_id": "mehLx_Fjv_c", "duration": "5:16", "valence": 0.7, "energy": 0.7, "tempo": 105.0},
+            {"spotify_id": "sos_active_21", "title": "Eine kleine Nachtmusik (Allegro)", "artist": "W.A. Mozart", "youtube_id": "nPbxTrPcm3o", "duration": "5:50", "valence": 0.8, "energy": 0.7, "tempo": 120.0},
+            {"spotify_id": "sos_active_22", "title": "Carmen Overture", "artist": "Georges Bizet", "youtube_id": "pmuFOuh3QHs", "duration": "2:20", "valence": 0.85, "energy": 0.8, "tempo": 125.0},
+            {"spotify_id": "sos_active_23", "title": "Ride of the Valkyries", "artist": "Richard Wagner", "youtube_id": "GGU1P6lBW6Q", "duration": "5:20", "valence": 0.7, "energy": 0.9, "tempo": 130.0},
+            {"spotify_id": "sos_active_24", "title": "Symphony No. 5 (1st Mvt)", "artist": "Ludwig van Beethoven", "youtube_id": "jv2WJM5OUXI", "duration": "7:15", "valence": 0.6, "energy": 0.8, "tempo": 108.0},
+            {"spotify_id": "sos_active_25", "title": "Radetzky March", "artist": "Johann Strauss I", "youtube_id": "eEEUIAYpWvM", "duration": "3:00", "valence": 0.9, "energy": 0.85, "tempo": 115.0},
+            {"spotify_id": "sos_active_26", "title": "Hungarian Dance No. 5", "artist": "Johannes Brahms", "youtube_id": "3X9LvC9WkkQ", "duration": "2:40", "valence": 0.85, "energy": 0.8, "tempo": 120.0},
+            {"spotify_id": "sos_active_27", "title": "Symphony No. 9 (Scherzo)", "artist": "Ludwig van Beethoven", "youtube_id": "p5favl2Qtx0", "duration": "10:00", "valence": 0.7, "energy": 0.85, "tempo": 116.0}
         ]
 
         count = 0

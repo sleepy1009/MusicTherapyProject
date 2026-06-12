@@ -34,19 +34,16 @@ class MusicTherapyEngine:
         a = dass_result.anxiety_score
         d = dass_result.depression_score
         
-        dominant = 'D' 
-        if s > a and s > d: dominant = 'S'
-        if a > s and a > d: dominant = 'A'
+        scores = {'S': s, 'A': a, 'D': d}
+        dominant = max(scores, key=scores.get)
 
         # SAFETY OVERRIDE
-        # only help D if A or S not too high
         if dominant == 'D' and (a >= 15 or s >= 26):
             dominant = 'A'
 
-        # 4 steps with two phase
-        # match 1 + 2, transition 2 + 3
+        # two phase (Euclid)
         if dominant == 'A': 
-            # Down-regulation
+            # Down-regulation 
             iso_phases = [
                 (0.3, 0.8, 120, 0.0), 
                 (0.4, 0.7, 105, 0.2), 
@@ -96,30 +93,30 @@ class MusicTherapyEngine:
         actual_disliked = [g for g in actual_disliked if g not in liked]
         target_genres = list(set(liked + self.safe_genres))
 
-        # simple check, improve later if need (if A,S high and user choose high enery -> ignore)
         has_conflict = False
         conflict_msg = ""
         if dominant in ['A', 'S'] and any(g in self.high_energy_genres for g in liked):
             has_conflict = True
-            conflict_msg = "MindMelody nhận thấy bạn đang có nhịp tim khá cao. Để đảm bảo an toàn, hệ thống đã tạm thời giảm bớt các bản nhạc điện tử mạnh mẽ trong sở thích của bạn. Hãy thả lỏng nhé."
+            conflict_msg = "MindMelody nhận thấy bạn đang có chỉ số căng thẳng khá cao. Để đảm bảo an toàn, hệ thống đã tạm thời giảm bớt các bản nhạc điện tử mạnh mẽ trong sở thích của bạn. Hãy thả lỏng nhé."
 
         playlist = []
         liked_ids = set(user.liked_tracks.values_list('spotify_id', flat=True))
 
+        # 4 steps
         for phase_idx, (ideal_v, ideal_e, ideal_t, ideal_i) in enumerate(iso_phases):
             tracks = self._find_nearest_tracks(
                 target_v=ideal_v, target_e=ideal_e, target_t=ideal_t, target_i=ideal_i,
                 target_genres=target_genres, disliked_genres=actual_disliked,
-                limit=9  # Grid 3x3
+                limit=9  # Lấy 9 bài Grid 3x3
             )
             for t in tracks:
-                t['phase'] = phase_idx + 1 # 4 steps
+                t['phase'] = phase_idx + 1 # 
                 t['isLiked'] = t['id'] in liked_ids
             playlist.extend(tracks)
 
         playlist = self._fetch_spotify_covers(playlist)
 
-        # final phase, get music form local db
+        # last phase
         if dominant == 'D':
             # Up-regulation
             sos_tracks = list(Track.objects.filter(spotify_id__startswith='sos_active_'))
@@ -127,11 +124,17 @@ class MusicTherapyEngine:
             # Down-regulation
             sos_tracks = list(Track.objects.filter(spotify_id__startswith='sos_calm_'))
 
-        for p in [5, 6, 7]:
-            if len(sos_tracks) >= 9:
-                phase_tracks = random.sample(sos_tracks, 9)
-            else:
-                phase_tracks = sos_tracks
+        num_needed = 9 * 3 # 3 pha, mỗi pha 9 bài
+        if len(sos_tracks) >= num_needed:
+            selected_sos = random.sample(sos_tracks, num_needed)
+        else:
+            selected_sos = sos_tracks
+            random.shuffle(selected_sos)
+
+        for i, p in enumerate([5, 6, 7]):
+            start_idx = i * 9
+            end_idx = start_idx + 9
+            phase_tracks = selected_sos[start_idx:end_idx]
 
             for t in phase_tracks:
                 playlist.append({
@@ -150,7 +153,7 @@ class MusicTherapyEngine:
                 })
 
         return {
-            "is_sos": False, # 
+            "is_sos": False,
             "has_conflict": has_conflict,
             "conflict_message": conflict_msg,
             "recommended_tracks": playlist
@@ -362,7 +365,7 @@ class ChatbotEngine:
             raise ValueError("Lỗi: Không tìm thấy GEMINI_API_KEY.")
             
         self.client = genai.Client(api_key=api_key)
-        self.model_name = 'gemini-3-flash-preview' # Gemini 3 Flash Preview, gemini-2.5-flash
+        self.model_name = 'gemini-2.5-flash' # gemini-3-flash-preview, gemini-2.5-flash
         
         # FILE RAG 
         base_dir = os.path.dirname(os.path.abspath(__file__))
