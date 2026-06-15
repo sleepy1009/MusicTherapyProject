@@ -133,11 +133,19 @@ const ChatPanel = () => {
             const hiddenPrompt = type === 'before' 
                 ? `[HỆ THỐNG]: User vừa báo cáo trạng thái đầu phiên là "${moodLabel}". Hãy nhắn 1 câu ngắn gọn động viên họ tận hưởng âm nhạc.`
                 : `[HỆ THỐNG]: User báo cáo trạng thái cuối phiên là "${moodLabel}". Hãy động viên ngắn gọn và kết thúc phiên.`;
+            
+            const songContext = currentSong?.title ? `${currentSong.title} - ${currentSong.artist}` : 'Đang không nghe nhạc';
 
             const res = await fetch(`${API}/users/chat/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ content: hiddenPrompt, session_id: currentSessionId, is_system_event: true })
+                body: JSON.stringify({ 
+                    content: hiddenPrompt, 
+                    session_id: currentSessionId, 
+                    is_system_event: true,
+                    current_song: songContext,
+                    current_track_id: currentSong?.id
+                })
             });
 
             if (res.ok) {

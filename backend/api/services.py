@@ -365,7 +365,7 @@ class ChatbotEngine:
             raise ValueError("Lỗi: Không tìm thấy GEMINI_API_KEY.")
             
         self.client = genai.Client(api_key=api_key)
-        self.model_name = 'gemini-2.5-flash' # gemini-3-flash-preview, gemini-2.5-flash
+        self.model_name = 'gemini-3-flash-preview' # gemini-3-flash-preview, gemini-2.5-flash
         
         # FILE RAG 
         base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -441,14 +441,21 @@ class ChatbotEngine:
             clinical_instruction = "Người dùng bị stress quá tải. Hãy gợi ý thả lỏng cơ bắp và chia nhỏ vấn đề."
 
         # 3. Context - max 10 length
+        if current_song in ['Không rõ', 'Đang không nghe nhạc', '']:
+            song_instruction = "- Hiện tại chưa rõ người dùng đang nghe bài gì, TUYỆT ĐỐI KHÔNG BỊA TÊN BÀI HÁT, chỉ tập trung tư vấn cảm xúc."
+        else:
+            song_instruction = f"- Hãy nhắc một cách tinh tế, tự nhiên về bài hát '{current_song}' để tăng sự đồng cảm."
+
         if len(history) == 0:
             conversation_context = f"""
             [NGỮ CẢNH]: Đây là CÂU CHÀO HỎI ĐẦU TIÊN của phiên chat. 
-            - Hãy chào {user_name} và nhắc một cách tự nhiên về bài hát '{current_song}' để bắt chuyện.
+            - Hãy chào {user_name}.
+            {song_instruction}
             """
         else:
             conversation_context = f"""
-            [NGỮ CẢNH]: Cuộc trò chuyện ĐANG DIỄN RA. Người dùng: {user_name}, đang nghe: '{current_song}'.
+            [NGỮ CẢNH]: Cuộc trò chuyện ĐANG DIỄN RA. Người dùng: {user_name}.
+            {song_instruction}
             - TUYỆT ĐỐI KHÔNG chào hỏi lại hay phân tích bài hát như một cỗ máy.
             """
 
