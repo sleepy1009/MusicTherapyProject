@@ -1,0 +1,39 @@
+{
+  "lang": {
+    "switchTo": "Đổi ngôn ngữ sang {{language}}",
+    "name": {
+      "en": "tiếng Anh",
+      "vi": "tiếng Việt"
+    }
+  },
+  "header": {
+    "guest": "Khách",
+    "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "profile": "Hồ sơ",
+    "logout": "Đăng xuất",
+    "logoutConfirm": {
+      "title": "Đăng xuất?",
+      "message": "Bạn có chắc chắn muốn đăng xuất khỏi MindMelody không?",
+      "confirm": "Đăng xuất",
+      "cancel": "Hủy"
+    },
+    "logoutSuccess": "Đã đăng xuất thành công. Hẹn gặp lại bạn nhé!"
+  },
+  "sos": {
+    "button": "SOS",
+    "intro": "Nếu cảm thấy tâm lý mình đang bất ổn, hãy liên hệ",
+    "contacts": [
+      {
+        "name": "Viện SKTTQG",
+        "detail": "(024) 3576 5344 hoặc 0984 104 115",
+        "href": "tel:02435765344"
+      },
+      {
+        "name": "Đường dây nóng Ngày Mai",
+        "detail": "096 306 1414",
+        "href": "tel:0963061414"
+      }
+    ]
+  }
+}

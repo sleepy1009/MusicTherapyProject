@@ -199,17 +199,6 @@ class MusicTherapyEngine:
                 ((track.valence - target_v) ** 2) * 1.5 +          
                 ((track.instrumentalness - target_i) ** 2) * 1.0   
             )
-
-            """
-            base_dist = math.sqrt(
-                ((track.valence - target_v) ** 2) * 1.5 +  
-                ((track.energy - target_e) ** 2) * 1.2 +
-                (((track.tempo - target_t) / 200) ** 2) * 1.0 +
-                ((track.instrumentalness - target_i) ** 2) * 2.0
-            )
-            """
-            
-            
             # Nếu weight > 1 (like) -> pick
             # Nếu weight < 1 (dislike) -> harder
             weight = genre_weights.get(track.genre, 1.0)

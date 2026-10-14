@@ -1,0 +1,49 @@
+{
+  "lang": {
+    "switchTo": "Switch language to {{language}}",
+    "name": {
+      "en": "English",
+      "vi": "Vietnamese"
+    }
+  },
+  "header": {
+    "guest": "Guest",
+    "login": "Log in",
+    "register": "Sign up",
+    "profile": "Profile",
+    "logout": "Log out",
+    "logoutConfirm": {
+      "title": "Log out?",
+      "message": "Are you sure you want to log out of MindMelody?",
+      "confirm": "Log out",
+      "cancel": "Cancel"
+    },
+    "logoutSuccess": "Logged out successfully. See you soon!"
+  },
+  "sos": {
+    "button": "SOS",
+    "intro": "If you're feeling overwhelmed or in crisis, please reach out:",
+    "contacts": [
+      {
+        "name": "988 Lifeline (US)",
+        "detail": "Call or text 988",
+        "href": "tel:988"
+      },
+      {
+        "name": "Find a Helpline (worldwide)",
+        "detail": "findahelpline.com",
+        "href": "https://findahelpline.com"
+      },
+      {
+        "name": "Vietnam NIMH",
+        "detail": "+84 24 3576 5344 / +84 984 104 115",
+        "href": "tel:+842435765344"
+      },
+      {
+        "name": "Ngày Mai Hotline (Vietnam)",
+        "detail": "+84 963 061 414",
+        "href": "tel:+84963061414"
+      }
+    ]
+  }
+}

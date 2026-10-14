@@ -2,9 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LogIn, User, LogOut, Phone, AlertTriangle  } from 'lucide-react';
 import { motion, AnimatePresence  } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 import { useToast } from './ToastContext'; 
 import { useConfirm } from './ConfirmContext'; 
+import LangToggle from './LangToggle';
+import { clearSession } from '../utils/clearSession';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -28,6 +31,8 @@ const itemVariants = {
 };
 
 const Header = () => {
+  const { t } = useTranslation();
+
   const [isLoggedIn, setIsLoggedIn] = useState(false); 
   const [displayName, setDisplayName] = useState('');
   const [userAvatar, setUserAvatar] = useState('/icon002.png'); 
@@ -47,7 +52,9 @@ const Header = () => {
     
     if (token) {
       setIsLoggedIn(true);
-      setDisplayName(name || 'Khách');
+      // Keep the raw name only; the "Guest" fallback is resolved at render time
+      // so it follows the current language.
+      setDisplayName(name || '');
       setUserAvatar(avatar || '/icon002.png'); 
     } else {
       setIsLoggedIn(false);
@@ -80,22 +87,25 @@ const Header = () => {
 
   const handleLogout = async () => {
     const isConfirmed = await confirm({
-        title: "Đăng xuất?",
-        message: "Bạn có chắc chắn muốn đăng xuất khỏi MindMelody không?",
-        confirmText: "Đăng xuất",
-        cancelText: "Hủy",
+        title: t('header.logoutConfirm.title'),
+        message: t('header.logoutConfirm.message'),
+        confirmText: t('header.logoutConfirm.confirm'),
+        cancelText: t('header.logoutConfirm.cancel'),
         type: "warning" 
     });
 
     if (!isConfirmed) return;
 
-    localStorage.clear();
-    sessionStorage.clear();
+    clearSession(); // clears auth data but keeps the chosen language
     setIsLoggedIn(false);
     navigate('/'); 
 
-    toast.success("Đã đăng xuất thành công. Hẹn gặp lại bạn nhé!");
+    toast.success(t('header.logoutSuccess'));
   };
+
+  // SOS contacts differ per language (see locales/*.json -> sos.contacts)
+  const sosContacts = t('sos.contacts', { returnObjects: true });
+  const contacts = Array.isArray(sosContacts) ? sosContacts : [];
 
   return (
     <motion.header 
@@ -107,7 +117,7 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 md:gap-6">
             <Link to="/" className="flex items-center gap-3 group">
               <div className="relative w-12 h-12 bg-transition rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
                     <img src="/icon002.png" alt="Icon" className="w-12 h-12 shadow-[0px_-5px_10px_rgba(255,255,255,0.25)] rounded-full " />
@@ -128,17 +138,19 @@ const Header = () => {
                   className="hidden md:flex items-center gap-2 text-[#EB4C4C]/80 hover:text-[#EB4C4C] transition-colors text-sm font-medium px-3 py-1.5 rounded-full border border-[#EB4C4C]/30 hover:bg-[#EB4C4C]/10 cursor-pointer"
               >
                   <Phone size={16} className="animate-pulse" />
-                  <span className="hidden sm:inline">SOS</span>
+                  <span className="hidden sm:inline">{t('sos.button')}</span>
               </button>
+
+              <LangToggle />
             
           </div>
 
           <div className="flex items-center gap-4">
             {!isLoggedIn ? (
               <div className="flex items-center gap-3">
-                <Link to="/login" className="text-main_text hover:text-[#C9CDCF] text-sm font-medium transition-colors">Đăng nhập</Link>
+                <Link to="/login" className="text-main_text hover:text-[#C9CDCF] text-sm font-medium transition-colors">{t('header.login')}</Link>
                 <Link to="/register" className="bg-white hover:bg-[#C9CDCF] text-black px-5 py-2 rounded-full font-bold text-sm transition-all shadow-lg flex items-center gap-2">
-                  <LogIn size={16} /> Đăng ký
+                  <LogIn size={16} /> {t('header.register')}
                 </Link>
               </div>
             ) : (
@@ -150,7 +162,7 @@ const Header = () => {
               >
                 <motion.div variants={itemVariants} className="hidden md:block text-right max-w-[150px]">
                   <p className="text-xs text-gray-500 font-medium uppercase tracking-tighter"></p>
-                  <p className="text-sm text-white font-bold font-out-text truncate leading-tight">{displayName}</p>
+                  <p className="text-sm text-white font-bold font-out-text truncate leading-tight">{displayName || t('header.guest')}</p>
                 </motion.div>
 
                 <motion.div variants={itemVariants}>
@@ -172,7 +184,7 @@ const Header = () => {
                       to="/profile"
                       className="hidden sm:flex justify-center bg-main_text min-w-[90px] gap-2 px-1 py-1 text-base font-bold font-out-text text-black hover:bg-[#C9CDCF] rounded-full transition-colors"
                     >
-                      <span>Hồ sơ</span>
+                      <span>{t('header.profile')}</span>
                     </Link>
                   </motion.div>
 
@@ -182,7 +194,7 @@ const Header = () => {
                     onClick={handleLogout}
                     className="flex items-center bg-white/5 gap-2 px-2 py-1 ml-1 text-sm font-bold font-out-text text-[#EB4C4C]/80 hover:text-[#EB4C4C]  rounded-full transition-colors cursor-pointer"
                   >
-                    <span className="hidden sm:inline">Đăng xuất</span>
+                    <span className="hidden sm:inline">{t('header.logout')}</span>
                   </motion.button>
 
                 </motion.div>
@@ -204,18 +216,24 @@ const Header = () => {
                   className="absolute top-full left-44 mt-1 z-50 px-4"
               >
                   <div className="bg-zinc-900 border border-[#EB4C4C]/30 p-5 rounded-2xl w-[420px] shadow-2xl">
-                      <p className="flex justify-center text-gray-300 text-sm mb-3">
-                          Nếu cảm thấy tâm lý mình đang bất ổn, hãy liên hệ
+                      <p className="flex justify-center text-center text-gray-300 text-sm mb-3">
+                          {t('sos.intro')}
                       </p>
                       <div className="space-y-2">
-                          <a href="tel:02435765344" className="flex items-center justify-between p-3 bg-[#EB4C4C]/5 rounded-xl hover:bg-[#EB4C4C]/10 transition border border-[#EB4C4C]/10">
-                              <span className="font-medium text-white text-sm">Viện SKTTQG</span>
-                              <span className="text-rose-400 font-bold text-xs">(024) 3576 5344 hoặc 0984 104 115</span>
-                          </a>
-                          <a href="tel:0963061414" className="flex items-center justify-between p-3 bg-[#EB4C4C]/5 rounded-xl hover:bg-[#EB4C4C]/10 transition border border-[#EB4C4C]/10">
-                              <span className="font-medium text-white text-sm">Đường dây nóng Ngày Mai</span>
-                              <span className="text-rose-400 font-bold text-xs">096 306 1414</span>
-                          </a>
+                          {contacts.map((c) => {
+                              const isExternal = c.href.startsWith('http');
+                              return (
+                                  <a
+                                      key={c.href}
+                                      href={c.href}
+                                      {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                                      className="flex items-center justify-between gap-3 p-3 bg-[#EB4C4C]/5 rounded-xl hover:bg-[#EB4C4C]/10 transition border border-[#EB4C4C]/10"
+                                  >
+                                      <span className="font-medium text-white text-sm">{c.name}</span>
+                                      <span className="text-rose-400 font-bold text-xs text-right">{c.detail}</span>
+                                  </a>
+                              );
+                          })}
                       </div>
                   </div>
               </motion.div>

@@ -13,6 +13,7 @@ import { ConfirmProvider } from './components/ConfirmContext';
 import ConsentModal from './components/ConsentModal';
 import './styles/galaxy.css'; 
 import SpaceErrorView from './views/SpaceErrorView';
+import { clearSession } from './utils/clearSession';
 
 
 const Layout = () => {
@@ -30,7 +31,7 @@ const Layout = () => {
 
   useEffect(() => {
     const handleGlobalError = (event) => {
-      console.error("Phát hiện lỗi Server:", event.detail);
+      console.error("Server error detected:", event.detail);
       setHasServerError(true);
     };
 
@@ -56,7 +57,7 @@ const Layout = () => {
         }
       }
     } catch (err) {
-      console.error("Lỗi kiểm tra Consent:", err);
+      console.error("Consent check failed:", err);
     }
   };
 
@@ -86,8 +87,7 @@ const Layout = () => {
   };
 
   const handleLogoutConsent = () => {
-    localStorage.clear();
-    sessionStorage.clear();
+    clearSession();
     setShowConsent(false);
     navigate('/login');
   };
