@@ -3,24 +3,27 @@ import { motion } from 'framer-motion';
 import { Lock, ShieldAlert, PlayCircle, Loader2 } from 'lucide-react';
 import Mascot from '../Mascot';
 import { calculateResult } from '../../utils/dassScoring';
+import { useTranslation } from 'react-i18next';
 
+// level is the language-neutral key from calculateResult (data.level)
 const getColorByLevel = (level) => {
     switch(level) {
-        case 'Bình thường': return '#38bdf8';
-        case 'Nhẹ':         return '#fcd34d';
-        case 'Vừa':         return '#fb923c';
-        case 'Nặng':        return '#f472b6';
-        case 'Rất nặng':    return '#c084fc';
-        default:            return '#9ca3af'; 
+        case 'normal':   return '#38bdf8';
+        case 'mild':     return '#fcd34d';
+        case 'moderate': return '#fb923c';
+        case 'severe':   return '#f472b6';
+        case 'extreme':  return '#c084fc';
+        default:         return '#9ca3af';
     }
 };
 
 const Gauge = ({ label, data, isHighest }) => {
+    const { t } = useTranslation();
     const radius = 45;
     const circumference = 2 * Math.PI * radius;
     const percent = Math.min(data.score / 42, 1);
     const offset = circumference - percent * circumference;
-    const color = getColorByLevel(data.label);
+    const color = getColorByLevel(data.level);
 
     return (
         <div 
@@ -56,13 +59,14 @@ const Gauge = ({ label, data, isHighest }) => {
                 className="text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider" 
                 style={{ backgroundColor: `${color}20`, color: color, border: `1px solid ${color}40` }}
             >
-                {data.label}
+                {t(`dass.levels.${data.level}`)}
             </span>
         </div>
     );
 };
 
 const ResultView = ({ answers, onLoginRequest, onContinue, onSaveSuccess }) => {
+    const { t } = useTranslation();
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -103,7 +107,7 @@ const ResultView = ({ answers, onLoginRequest, onContinue, onSaveSuccess }) => {
                 if (onSaveSuccess) onSaveSuccess();
                 if (onContinue) onContinue();
             } else {
-                console.error("Lỗi lưu DASS-21");
+                console.error("Failed to save DASS-21 result");
                 setIsSaving(false);
             }
         } catch (err) {
@@ -120,15 +124,15 @@ const ResultView = ({ answers, onLoginRequest, onContinue, onSaveSuccess }) => {
                        <Mascot status="run" className="w-full h-full opacity-80" />
                    </div>
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-2 animate-pulse">Đang phân tích cảm xúc...</h2>
-                <p className="text-gray-400">MindMelody đang lượng hóa các chỉ số của bạn</p>
+                <h2 className="text-2xl font-bold text-white mb-2 animate-pulse">{t('result.analyzingTitle')}</h2>
+                <p className="text-gray-400">{t('result.analyzingSub')}</p>
             </div>
         );
     }
 
-    const isSOS = ['Nặng', 'Rất nặng'].includes(result.S.label) || 
-                  ['Nặng', 'Rất nặng'].includes(result.A.label) || 
-                  ['Nặng', 'Rất nặng'].includes(result.D.label);
+    const isSOS = ['severe', 'extreme'].includes(result.S.level) ||
+                  ['severe', 'extreme'].includes(result.A.level) ||
+                  ['severe', 'extreme'].includes(result.D.level);
 
     const scores = [result.D.score, result.A.score, result.S.score];
     const maxScore = Math.max(...scores);
@@ -149,19 +153,19 @@ const ResultView = ({ answers, onLoginRequest, onContinue, onSaveSuccess }) => {
                         <Mascot status={isSOS ? "listening" : "idle2"} className="w-full h-full drop-shadow-lg" />
                     </div>
                     <h2 className="text-3xl md:text-4xl font-bold font-out-text text-white mb-3 tracking-wide">
-                        Kết quả DASS-21
+                        {t('result.title')}
                     </h2>
                     <p className="text-gray-300 max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
                         {isSOS 
-                            ? "Chúng tôi nhận thấy bạn đang mang khá nhiều áp lực. Đừng lo lắng, hệ thống đã chuẩn bị một không gian trị liệu đặc biệt an toàn dành riêng cho bạn." 
-                            : "Kết quả của bạn đã sẵn sàng. Hãy lưu lại hồ sơ để thuật toán của chúng tôi tạo nên lộ trình âm nhạc phù hợp nhất nhé."}
+                            ? t('result.descSos') 
+                            : t('result.descNormal')}
                     </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 relative z-10">
-                    <Gauge label="Trầm cảm" data={result.D} isHighest={result.D.score === maxScore && result.D.score > 0} />
-                    <Gauge label="Lo âu" data={result.A} isHighest={result.A.score === maxScore && result.A.score > 0} />
-                    <Gauge label="Căng thẳng" data={result.S} isHighest={result.S.score === maxScore && result.S.score > 0} />
+                    <Gauge label={t('dass.categories.depression')} data={result.D} isHighest={result.D.score === maxScore && result.D.score > 0} />
+                    <Gauge label={t('dass.categories.anxiety')} data={result.A} isHighest={result.A.score === maxScore && result.A.score > 0} />
+                    <Gauge label={t('dass.categories.stress')} data={result.S} isHighest={result.S.score === maxScore && result.S.score > 0} />
                 </div>
 
                 {/* Action Buttons */}
@@ -175,12 +179,12 @@ const ResultView = ({ answers, onLoginRequest, onContinue, onSaveSuccess }) => {
                                 rounded-full w-full sm:w-auto justify-center disabled:opacity-50`}
                         >
                             {isSaving ? (
-                                <><Loader2 className="w-5 h-5 animate-spin" /> Đang thiết lập quỹ đạo...</>
+                                <><Loader2 className="w-5 h-5 animate-spin" /> {t('result.saving')}</>
                             ) : (
                                 <>
                                     {isSOS ? <ShieldAlert className="w-5 h-5 text-purple-300" /> : <PlayCircle className="w-5 h-5 text-[#9ED3DC]" />}
                                     <span className="tracking-wider uppercase">
-                                        {isSOS ? "Vào Không gian SOS" : "Lưu & Tiếp tục"}
+                                        {isSOS ? t('result.enterSos') : t('result.saveContinue')}
                                     </span>
                                 </>
                             )}
@@ -190,7 +194,7 @@ const ResultView = ({ answers, onLoginRequest, onContinue, onSaveSuccess }) => {
                             onClick={onLoginRequest} 
                             className="px-8 py-4 bg-[#9ED3DC] text-black font-extrabold rounded-full hover:scale-105 transition-transform flex items-center justify-center gap-3 shadow-[0_0_20px_-5px_#9ED3DC] w-full sm:w-auto uppercase tracking-wider"
                         >
-                            <Lock className="w-5 h-5" /> Đăng nhập để kích hoạt
+                            <Lock className="w-5 h-5" /> {t('result.loginToActivate')}
                         </button>
                     )}
                 </div>

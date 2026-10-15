@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '../ToastContext';
+import { useTranslation } from 'react-i18next';
 
 const PlayerContext = createContext();
 export const usePlayer = () => useContext(PlayerContext);
 
 export const PlayerProvider = ({ children, initialPlaylist, mode, initialSessionId }) => {
+    const { t, i18n } = useTranslation();
     const API = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
     const [skipCount, setSkipCount] = useState(0);
@@ -77,10 +79,10 @@ export const PlayerProvider = ({ children, initialPlaylist, mode, initialSession
     };
 
     const triggerEmergencySOS = async () => {
-        console.warn("KÍCH HOẠT QUY TRÌNH SOS");
+        console.warn("Triggering emergency SOS flow");
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         try {
-            const res = await fetch(`${API}/users/therapy-playlist/?force_mode=sos`, {
+            const res = await fetch(`${API}/users/therapy-playlist/?force_mode=sos&lang=${i18n.language}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             
@@ -97,7 +99,7 @@ export const PlayerProvider = ({ children, initialPlaylist, mode, initialSession
                 }
             }
         } catch (err) {
-            console.error("Lỗi kích hoạt SOS:", err);
+            console.error("SOS trigger error:", err);
         }
     };
 
@@ -109,8 +111,8 @@ export const PlayerProvider = ({ children, initialPlaylist, mode, initialSession
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ track_id: trackId, action: action, session_id: sessionId })
             });
-            console.log(`📊 AI Feedback: Đã báo cáo [${action}] cho bài hát ${trackId}`);
-        } catch (e) { console.error("Lỗi gửi feedback:", e); }
+            console.log(`AI feedback: reported [${action}] for track ${trackId}`);
+        } catch (e) { console.error("Failed to send feedback:", e); }
     };
 
     const handleNext = () => {
@@ -128,13 +130,13 @@ export const PlayerProvider = ({ children, initialPlaylist, mode, initialSession
 
                     if (!localStorage.getItem('has_shown_skip_guidance')) {
                         toast.info(
-                            "Mẹo nhỏ: Tuân thủ thứ tự bài hát sẽ giúp hiệu quả trị liệu tốt nhất. Nếu giai điệu này không hợp, hãy dùng tính năng Đổi bài (Swap) ở danh sách phát thay vì Bỏ qua nhé!", 
+                            t('player.skipTip'), 
                             12000 
                         );
                         localStorage.setItem('has_shown_skip_guidance', 'true');
                     }
                     
-                    console.log(`⏱️ Đưa bài ${trackToReport} vào Map chờ phạt (5s)...`);
+                    console.log(`Queued track ${trackToReport} for the skip penalty (5s)...`);
                     const timeoutId = setTimeout(() => {
                         reportFeedback(trackToReport, 'SKIPPED');
                         skipTimeoutsRef.current.delete(trackToReport);
@@ -170,8 +172,8 @@ export const PlayerProvider = ({ children, initialPlaylist, mode, initialSession
         if (skipCount >= 3) {
             const triggerProactiveBot = async () => {
                 const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-                const songContext = currentSong?.title ? `${currentSong.title} - ${currentSong.artist}` : 'Đang không rõ';
-                const systemInstruction = "Người dùng vừa bỏ qua (skip) nhạc liên tục 3 lần. Hãy chủ động hỏi thăm một cách tinh tế, tự nhiên. Hỏi xem họ đang bồn chồn trong lòng, hay do nhạc chưa hợp gu. Đi thẳng vào vấn đề, TUYỆT ĐỐI KHÔNG CHÀO HỎI LẠI.";
+                const songContext = currentSong?.title ? `${currentSong.title} - ${currentSong.artist}` : '';
+                const systemInstruction = "The user just skipped the music 3 times in a row. Proactively check in with them in a subtle, natural way. Ask whether they are feeling restless inside, or whether the music simply does not suit their taste. Get straight to the point and DO NOT GREET AGAIN.";
 
                 try {
                     const res = await fetch(`${API}/users/chat/`, {
@@ -181,12 +183,13 @@ export const PlayerProvider = ({ children, initialPlaylist, mode, initialSession
                             content: systemInstruction, 
                             current_song: songContext,
                             current_track_id: currentSong?.id, 
-                            is_system_event: true 
+                            is_system_event: true,
+                            lang: i18n.language
                         })
                     });
                     
                     if (res.ok) {
-                        toast.info("MindMelody vừa gửi cho bạn một lời nhắn...");
+                        toast.info(t('player.proactiveToast'));
                         setUnreadCount(prev => prev + 1); 
                     }
                 } catch (err) { console.error(err); }
@@ -201,7 +204,7 @@ export const PlayerProvider = ({ children, initialPlaylist, mode, initialSession
         if (currentSong && skipTimeoutsRef.current.has(currentSong.id)) {
             clearTimeout(skipTimeoutsRef.current.get(currentSong.id));
             skipTimeoutsRef.current.delete(currentSong.id);
-            console.log(`Đã HỦY lệnh phạt Skip cho bài ${currentSong.id} (Do quay lại)`);
+            console.log(`Cancelled the skip penalty for track ${currentSong.id} (user went back)`);
         }
 
         if (currentIndex > 0) setCurrentIndex(prev => prev - 1);
@@ -232,7 +235,7 @@ export const PlayerProvider = ({ children, initialPlaylist, mode, initialSession
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ track: track })
             });
-        } catch (e) { console.error("Lỗi đồng bộ tim:", e); }
+        } catch (e) { console.error("Failed to sync like:", e); }
     };
 
     const handleOpenSwap = async (idx) => {
@@ -292,7 +295,7 @@ export const PlayerProvider = ({ children, initialPlaylist, mode, initialSession
                 setIsPlaying(true);
             }
         } catch (error) {
-            console.error("Lỗi lưu swap:", error);
+            console.error("Failed to save swap:", error);
             setSwapState(prev => ({ ...prev, loading: false }));
         }
     };
@@ -312,7 +315,7 @@ export const PlayerProvider = ({ children, initialPlaylist, mode, initialSession
                 const data = await res.json();
                 setDiaryEntries(data);
             }
-        } catch (err) { console.error("Lỗi lấy nhật ký:", err); }
+        } catch (err) { console.error("Failed to fetch diary:", err); }
     };
 
     useEffect(() => {

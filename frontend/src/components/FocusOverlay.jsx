@@ -12,10 +12,12 @@ import CheckpointView from './focus/CheckpointView';
 
 import { useToast } from './ToastContext'; 
 import { useConfirm } from './ConfirmContext';
+import { useTranslation } from 'react-i18next';
 
 const API = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 const FocusOverlay = ({ onClose }) => {
+  const { t, i18n } = useTranslation();
   const [step, setStep] = useState('checking'); // checking -> checkpoint -> intro -> chat -> result -> loading-music -> card-selection
   const [answers, setAnswers] = useState({});
   const [showConfirm, setShowConfirm] = useState(false); 
@@ -59,7 +61,7 @@ const FocusOverlay = ({ onClose }) => {
                     setLatestPlaylist(sessionData);
                 }
             } catch (sessionErr) {
-                console.error("Cảnh báo: Lỗi khi lấy Playlist cũ:", sessionErr);
+                console.error("Warning: failed to fetch the previous playlist:", sessionErr);
             }
 
             if (location.state?.autoStartTherapy) {
@@ -74,7 +76,7 @@ const FocusOverlay = ({ onClose }) => {
             }
 
         } catch (err) { 
-            console.error("LỖI (checkUserStatus):", err);
+            console.error("checkUserStatus error:", err);
             setStep('intro'); 
         }
     };
@@ -91,11 +93,17 @@ const fetchTherapyMusic = async (mode = 'auto') => {
       setStep('loading-music');
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       try {
-          const res = await fetch(`${API}/users/therapy-playlist/?force_mode=${mode}`, { 
+          const res = await fetch(`${API}/users/therapy-playlist/?force_mode=${mode}&lang=${i18n.language}`, { 
               headers: { 'Authorization': `Bearer ${token}` } 
           });
           const data = await res.json();
-          
+
+          if (!res.ok) {
+              toast.error(t(`errors.${data.code}`, { defaultValue: data.error || t('focus.toast.playlistFailed') }));
+              setStep('intro');
+              return;
+          }
+
           if (data.is_sos) {
               setSelectedCards(data.recommended_tracks);
               setTimeout(() => {
@@ -110,19 +118,19 @@ const fetchTherapyMusic = async (mode = 'auto') => {
 
           const stepsFormat = [];
           const phaseInfos = [
-              { desc: "Đồng điệu - Lắng nghe cảm xúc hiện tại của bạn.", color: "from-[#77B1D4] to-[#90D5FF]" },
-              { desc: "Đồng điệu - Thả lỏng và chấp nhận mọi suy nghĩ.", color: "from-[#77B1D4] to-[#90D5FF]" },
-              { desc: "Chuyển giao - Một chút nhịp điệu để xoa dịu.", color: "from-[#73abf5] to-[#6ba6ff]" },
-              { desc: "Chuyển giao - Từ từ chuyển hướng tâm trạng.", color: "from-[#73abf5] to-[#6ba6ff]" },
-              { desc: "Đích đến - Tìm lại sự bình yên trong tâm trí.", color: "from-[#FFB76C] to-[#FFF57E]" },
-              { desc: "Đích đến - Ánh sáng nhẹ nhàng và hy vọng.", color: "from-[#FFA4A4] to-[#FFBDBD]" },
-              { desc: "Đích đến - Chào đón nguồn năng lượng tích cực mới.", color: "from-[#FFA4A4] to-[#FFBDBD]" }
+              { descKey: 'focus.phases.1', color: "from-[#77B1D4] to-[#90D5FF]" },
+              { descKey: 'focus.phases.2', color: "from-[#77B1D4] to-[#90D5FF]" },
+              { descKey: 'focus.phases.3', color: "from-[#73abf5] to-[#6ba6ff]" },
+              { descKey: 'focus.phases.4', color: "from-[#73abf5] to-[#6ba6ff]" },
+              { descKey: 'focus.phases.5', color: "from-[#FFB76C] to-[#FFF57E]" },
+              { descKey: 'focus.phases.6', color: "from-[#FFA4A4] to-[#FFBDBD]" },
+              { descKey: 'focus.phases.7', color: "from-[#FFA4A4] to-[#FFBDBD]" }
           ];
 
           for (let i = 1; i <= 7; i++) {
               const allPhaseCards = data.recommended_tracks.filter(t => t.phase === i);
               stepsFormat.push({
-                  id: i, title: `Giai đoạn ${i}`, desc: phaseInfos[i-1].desc, color: phaseInfos[i-1].color,
+                  id: i, title: `Phase ${i}`, descKey: phaseInfos[i-1].descKey, color: phaseInfos[i-1].color,
                   allCards: allPhaseCards, 
                   shuffleIndex: 0, 
                   cards: allPhaseCards.slice(0, 3) 
@@ -135,7 +143,7 @@ const fetchTherapyMusic = async (mode = 'auto') => {
           setStep('card-selection');
       } catch (err) {
           console.error(err);
-          toast.error("Lỗi khi tạo playlist! Vui lòng thử lại.");
+          toast.error(t('focus.toast.playlistFailed'));
           setStep('intro');
       }
   };
@@ -224,8 +232,8 @@ const handleStartListening = async (overrideTracks = null) => {
               });
           }
       } catch (error) {
-          console.error("Lỗi khi xử lý nhạc:", error);
-          toast.error("Có lỗi xảy ra khi xử lý nhạc.");
+          console.error("Failed to process music:", error);
+          toast.error(t('focus.toast.musicFailed'));
       }
 
       onClose();
@@ -234,10 +242,10 @@ const handleStartListening = async (overrideTracks = null) => {
 
   const handleCloseClick = async () => {
       const isConfirmed = await confirm({
-          title: "Chú ý",
-          message: "Bạn có chắc muốn thoát không? Quá trình hiện tại sẽ bị hủy.",
-          confirmText: "Thoát luôn",
-          cancelText: "Tiếp tục",
+          title: t('focus.exitConfirm.title'),
+          message: t('focus.exitConfirm.message'),
+          confirmText: t('focus.exitConfirm.confirm'),
+          cancelText: t('focus.exitConfirm.cancel'),
           type: "warning" 
       });
 
@@ -265,9 +273,9 @@ const handleStartListening = async (overrideTracks = null) => {
       {!isSelectionFinished && (
         <motion.div layoutId="focus-container" className="w-full max-w-5xl h-[80vh] border border-white/20 rounded-[32px] overflow-hidden relative bg-black/40 backdrop-blur-md">
             
-          {step === 'checking' && <div className="flex h-full items-center justify-center text-white"><span className="animate-pulse">Đang tải dữ liệu...</span></div>}
+          {step === 'checking' && <div className="flex h-full items-center justify-center text-white"><span className="animate-pulse">{t('focus.loading')}</span></div>}
           
-          {step === 'loading-music' && <div className="flex h-full flex-col items-center justify-center text-white"><Mascot status="thinking" className="w-32 h-32 mb-4"/><span className="animate-pulse text-xl font-bold">AI đang phân tích và tìm nhạc cho bạn...</span></div>}
+          {step === 'loading-music' && <div className="flex h-full flex-col items-center justify-center text-white"><Mascot status="thinking" className="w-32 h-32 mb-4"/><span className="animate-pulse text-xl font-bold">{t('focus.findingMusic')}</span></div>}
 
           {step === 'checkpoint' && latestResult && (
               <CheckpointView 

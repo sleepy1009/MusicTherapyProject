@@ -6,6 +6,9 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceArea 
 } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { formatDate } from '../../utils/formatDate';
+import { normalizeLevel } from '../../utils/dassScoring';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -30,10 +33,12 @@ const fakeListeningData = [{ name: 'T2', minutes: 45 }, { name: 'T3', minutes: 6
 const fakeGenreData = [{ name: 'Lofi & Chill', value: 45, color: '#66D0BC' }, { name: 'Acoustic', value: 30, color: '#41A67E' }, { name: 'Piano', value: 15, color: '#cbf4d8' }, { name: 'Khác', value: 10, color: '#888888' }];
 
 const TabStats = () => {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   const [timeFilter, setTimeFilter] = useState('month'); 
   const [selectedSessionId, setSelectedSessionId] = useState('');
   const [chartData, setChartData] = useState([]);
-  const [dateRangeText, setDateRangeText] = useState('');
+  const [dateRange, setDateRange] = useState(undefined); // undefined = not computed yet, null = no data, { first, last } = range
 
   const API = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -49,9 +54,9 @@ const TabStats = () => {
 
   // DÙNG REACT QUERY ĐỂ LẤY STATS (Tự động gọi lại nếu timeFilter hoặc selectedSessionId thay đổi)
   const { data: statsData, isLoading: isStatsLoading } = useQuery({
-    queryKey: ['userStats', timeFilter, selectedSessionId],
+    queryKey: ['userStats', timeFilter, selectedSessionId, lang],
     queryFn: async () => {
-      const url = `${API}/users/stats/?filter=${timeFilter}${selectedSessionId ? `&session_id=${selectedSessionId}` : ''}`;
+      const url = `${API}/users/stats/?filter=${timeFilter}&lang=${lang}${selectedSessionId ? `&session_id=${selectedSessionId}` : ''}`;
       const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
       if (!res.ok) throw new Error('Network response was not ok');
       return res.json();
@@ -84,7 +89,7 @@ const TabStats = () => {
         
         if (timeFilter === 'year') {
             key = `${date.getFullYear()}-${date.getMonth() + 1}`; 
-            label = `T${date.getMonth() + 1}`;
+            label = lang === 'vi' ? `T${date.getMonth() + 1}` : date.toLocaleDateString('en-GB', { month: 'short' });
         } else {
             key = date.toLocaleDateString('vi-VN'); 
             label = `${date.getDate()}/${date.getMonth() + 1}`;
@@ -111,22 +116,31 @@ const TabStats = () => {
 
     if (filteredData.length > 0) {
         const sorted = [...filteredData].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-        const first = new Date(sorted[0].created_at).toLocaleDateString('vi-VN');
-        const last = new Date(sorted[sorted.length - 1].created_at).toLocaleDateString('vi-VN');
-        
-        if(first === last) setDateRangeText(`Dữ liệu ngày: ${first}`);
-        else setDateRangeText(`Từ ${first} đến ${last}`);
+        setDateRange({ first: sorted[0].created_at, last: sorted[sorted.length - 1].created_at });
     } else {
-        setDateRangeText('Không có dữ liệu trong khoảng thời gian này');
+        setDateRange(null);
     }
 
-  }, [rawData, timeFilter]);
+  }, [rawData, timeFilter, lang]);
+
+  const rangeText = (() => {
+    if (dateRange === undefined) return '';
+    if (dateRange === null) return t('profile.stats.noDataInRange');
+    const from = formatDate(dateRange.first, lang);
+    const to = formatDate(dateRange.last, lang);
+    return from === to ? t('profile.stats.dataOnDate', { date: from }) : t('profile.stats.fromTo', { from, to });
+  })();
+
+  const levelText = (value) => {
+    const key = normalizeLevel(value);
+    return key ? t(`dass.levels.${key}`) : value;
+  };
 
   const hasData = rawData.length > 0;
   const isLoading = isDassLoading || isStatsLoading;
 
   if (isLoading && !hasData) {
-      return <div className="text-center text-gray-400 py-20">Đang tải dữ liệu biểu đồ...</div>;
+      return <div className="text-center text-gray-400 py-20">{t('profile.stats.loading')}</div>;
   }
 
   const timeStats = statsData?.time_stats || [];
@@ -142,7 +156,7 @@ const TabStats = () => {
         {/* HEADER & FILTERS */}
         <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-white/10 pb-4 mb-6 gap-4">
             <h2 className="text-2xl font-bold text-transparent font-out-text bg-clip-text bg-gradient-to-r from-[#75ae88] to-[#cbf4d8] flex items-center gap-2">
-                <BarChart2 className="w-6 h-6 text-[#41A67E]" /> Thống kê & biểu đồ
+                <BarChart2 className="w-6 h-6 text-[#41A67E]" /> {t('profile.stats.title')}
             </h2>
             
             
@@ -154,7 +168,7 @@ const TabStats = () => {
                             timeFilter === filter ? 'bg-[#41A67E] text-white shadow-md' : 'text-gray-400 hover:text-white'
                         }`}
                     >
-                        {filter === 'week' ? '7 Ngày qua' : filter === 'month' ? '30 Ngày qua' : '1 Năm qua'}
+                        {t(`profile.stats.filter.${filter}`)}
                     </button>
                 ))}
             </div>
@@ -166,20 +180,20 @@ const TabStats = () => {
                 <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-4">
                     <BarChart2 className="w-12 h-12 text-gray-400 opacity-50" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Chưa có dữ liệu phân tích</h3>
-                <p className="text-gray-400 text-sm max-w-md">Hãy làm test DASS-21 ít nhất 1 lần để hệ thống bắt đầu theo dõi sức khỏe tinh thần của bạn nhé.</p>
+                <h3 className="text-xl font-bold text-white">{t('profile.stats.emptyTitle')}</h3>
+                <p className="text-gray-400 text-sm max-w-md">{t('profile.stats.emptyBody')}</p>
             </motion.div>
         ) : (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
                 <p className="text-xs text-gray-400 mt-1">
-                    {dateRangeText} {chartData.length > 0 && <span className="italic text-[#66D0BC]">- Đã tính trung bình các lần test cùng thời điểm</span>}
+                    {rangeText} {chartData.length > 0 && <span className="italic text-[#66D0BC]">{t('profile.stats.averaged')}</span>}
                 </p>
                 {/* 1. CHART ROW 1: DASS-21 SCORES */}
                 <div className="w-full bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
                     <div className="flex items-center justify-between mb-6">
                         <div>
                             <h3 className="text-base font-bold text-main_text flex items-center gap-2">
-                                <Brain className="w-5 h-5 text-[#41A67E]" /> Biến thiên Tâm lý (DASS-21)
+                                <Brain className="w-5 h-5 text-[#41A67E]" /> {t('profile.stats.dassTitle')}
                             </h3>
                             
                         </div>
@@ -199,14 +213,14 @@ const TabStats = () => {
                                     <ReferenceArea y1={10} y2={22} fill="#F59E0B" fillOpacity={0.05} />
                                     <ReferenceArea y1={22} y2={42} fill="#EF4444" fillOpacity={0.05} />
 
-                                    <Line type="monotone" dataKey="stress" name="Căng thẳng" stroke="#FF0000" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                                    <Line type="monotone" dataKey="anxiety" name="Lo âu" stroke="#758A93" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                                    <Line type="monotone" dataKey="depression" name="Trầm cảm" stroke="#685AFF" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                                    <Line type="monotone" dataKey="stress" name={t('dass.categories.stress')} stroke="#FF0000" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                                    <Line type="monotone" dataKey="anxiety" name={t('dass.categories.anxiety')} stroke="#758A93" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                                    <Line type="monotone" dataKey="depression" name={t('dass.categories.depression')} stroke="#685AFF" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                                 </LineChart>
                             </ResponsiveContainer>
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-500 text-sm">
-                                Không có bài test nào trong khoảng thời gian này.
+                                {t('profile.stats.noTests')}
                             </div>
                         )}
                     </div>
@@ -218,7 +232,7 @@ const TabStats = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 ">
                     <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-6">
                         <h3 className="text-base font-bold text-main_text flex items-center gap-2 mb-6">
-                            <Clock className="w-5 h-5 text-[#66D0BC]" /> Thời gian trị liệu
+                            <Clock className="w-5 h-5 text-[#66D0BC]" /> {t('profile.stats.therapyTime')}
                         </h3>
                         <div className="w-full h-[220px]">
                             <ResponsiveContainer width="100%" height="100%">
@@ -227,7 +241,7 @@ const TabStats = () => {
                                     <XAxis dataKey="name" stroke="rgba(255,255,255,0.4)" fontSize={12} tickLine={false} axisLine={false} dy={10} />
                                     <YAxis stroke="rgba(255,255,255,0.4)" fontSize={12} tickLine={false} axisLine={false} />
                                     <Tooltip cursor={{fill: 'rgba(255,255,255,0.05)'}} content={<CustomTooltip />} />
-                                    <Bar dataKey="minutes" name="Phút" fill="#41A67E" radius={[6, 6, 0, 0]} />
+                                    <Bar dataKey="minutes" name={t('profile.stats.minutes')} fill="#41A67E" radius={[6, 6, 0, 0]} />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
@@ -235,7 +249,7 @@ const TabStats = () => {
 
                     <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-6">
                         <h3 className="text-base font-bold text-main_text flex items-center gap-2 mb-2">
-                            <Music className="w-5 h-5 text-[#cbf4d8]" /> Thể loại hay nghe
+                            <Music className="w-5 h-5 text-[#cbf4d8]" /> {t('profile.stats.topGenres')}
                         </h3>
                         <div className="w-full h-[240px] relative">
                             <ResponsiveContainer width="100%" height="100%">
@@ -257,9 +271,9 @@ const TabStats = () => {
                         <div className="flex flex-col md:flex-row md:items-center justify-between mb-2 gap-4">
                             <div>
                                 <h3 className="text-base font-bold text-[#66D0BC] flex items-center gap-2">
-                                    <Sparkles className="w-5 h-5" /> Đường cong Đồng bộ Cảm xúc
+                                    <Sparkles className="w-5 h-5" /> {t('profile.stats.isoTitle')}
                                 </h3>
-                                <p className="text-xs text-gray-400 mt-1">Năng lượng, Độ tích cực và Nhịp độ (BPM)</p>
+                                <p className="text-xs text-gray-400 mt-1">{t('profile.stats.isoSub')}</p>
                             </div>
                             
                             <select 
@@ -269,7 +283,7 @@ const TabStats = () => {
                             >
                                 {sessionHistory.map(session => (
                                     <option key={session.id} value={session.id}>
-                                        Ngày {session.date} ({session.stress} / {session.anxiety})
+                                        {t('profile.stats.sessionOption', { date: session.date, stress: levelText(session.stress), anxiety: levelText(session.anxiety) })}
                                     </option>
                                 ))}
                             </select>
@@ -287,9 +301,9 @@ const TabStats = () => {
                                     <Tooltip content={<CustomTooltip />} />
                                     <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
 
-                                    <Line yAxisId="left" type="monotone" dataKey="valence" name="Độ Tích Cực (0-1)" stroke="#FFB76C" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                                    <Line yAxisId="left" type="monotone" dataKey="energy" name="Năng lượng (0-1)" stroke="#8CE4FF" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                                    <Line yAxisId="right" type="monotone" dataKey="tempo" name="Nhịp độ (BPM)" stroke="#bfff51" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} strokeDasharray="5 5" />
+                                    <Line yAxisId="left" type="monotone" dataKey="valence" name={t('profile.stats.valence')} stroke="#FFB76C" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                                    <Line yAxisId="left" type="monotone" dataKey="energy" name={t('profile.stats.energy')} stroke="#8CE4FF" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                                    <Line yAxisId="right" type="monotone" dataKey="tempo" name={t('profile.stats.tempo')} stroke="#bfff51" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} strokeDasharray="5 5" />
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>

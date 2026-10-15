@@ -20,6 +20,16 @@ from django.db.models import Count
 from .models import User, DiaryEntry, DassResult, Track, ListeningSession, SessionTrack, MusicFeedback, SpotifyTrack, ChatSession, ChatMessage
 from .serializers import RegisterSerializer, UserSerializer, DiaryEntrySerializer, DassResultSerializer, ChatMessageSerializer
 from .services import MusicTherapyEngine, ChatbotEngine
+from .localization import (
+    DEFAULT_CHAT_TITLES, WEEKDAY_LABELS, MONTH_LABELS,
+    get_request_lang, is_severe_level, tr,
+)
+
+
+def error_response(message, code, http_status=status.HTTP_400_BAD_REQUEST):
+    """Language-neutral API error: English text + a stable `code` the frontend translates."""
+    return Response({"error": message, "code": code}, status=http_status)
+
 
 # API reg - all
 class RegisterView(generics.CreateAPIView):
@@ -60,7 +70,7 @@ class GoogleLoginView(APIView):
     def post(self, request):
         token = request.data.get('token')
         if not token:
-            return Response({"error": "Thiếu token từ Google"}, status=status.HTTP_400_BAD_REQUEST)
+            return error_response("Missing Google token", "google_token_missing")
 
         try:
             google_response = requests.get(
@@ -69,7 +79,7 @@ class GoogleLoginView(APIView):
             )
             
             if not google_response.ok:
-                 return Response({"error": "Token Google không hợp lệ hoặc đã hết hạn"}, status=status.HTTP_401_UNAUTHORIZED)
+                 return error_response("Invalid or expired Google token", "google_token_invalid", status.HTTP_401_UNAUTHORIZED)
                  
             user_info = google_response.json()
             email = user_info.get('email')
@@ -78,7 +88,7 @@ class GoogleLoginView(APIView):
             picture = user_info.get('picture')
 
             if not email:
-                return Response({"error": "Không lấy được email từ Google"}, status=status.HTTP_400_BAD_REQUEST)
+                return error_response("Could not get email from Google", "google_email_missing")
 
             user = User.objects.filter(Q(google_id=google_id) | Q(email=email)).first()
 
@@ -109,8 +119,8 @@ class GoogleLoginView(APIView):
             }, status=status.HTTP_200_OK)
 
         except Exception as e:
-            print("Lỗi Google Login:", e)
-            return Response({"error": "Đã xảy ra lỗi hệ thống"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            print("Google login error:", e)
+            return error_response("An internal error occurred", "server_error", status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # API DASS-21 
@@ -134,12 +144,13 @@ class GenerateTherapyPlaylistView(APIView):
         latest_test = DassResult.objects.filter(user=user).order_by('-created_at').first()
         
         if not latest_test:
-            return Response({"error": "Bạn cần làm bài test DASS-21 trước!"}, status=status.HTTP_400_BAD_REQUEST)
+            return error_response("You need to take the DASS-21 test first.", "dass_required")
 
+        # accepts both the old Vietnamese labels and English ones
         is_severe = (
-            latest_test.stress_level in ['Nặng', 'Rất nặng'] or
-            latest_test.anxiety_level in ['Nặng', 'Rất nặng'] or
-            latest_test.depression_level in ['Nặng', 'Rất nặng']
+            is_severe_level(latest_test.stress_level) or
+            is_severe_level(latest_test.anxiety_level) or
+            is_severe_level(latest_test.depression_level)
         )
 
         is_sos_flow = (force_mode == 'sos') or (force_mode == 'auto' and is_severe)
@@ -175,7 +186,7 @@ class GenerateTherapyPlaylistView(APIView):
             }, status=status.HTTP_200_OK)
 
         engine = MusicTherapyEngine()
-        playlist_data = engine.generate_therapy_playlist(user, latest_test)
+        playlist_data = engine.generate_therapy_playlist(user, latest_test, lang=get_request_lang(request))
 
         for track in playlist_data['recommended_tracks']:
             track['isLiked'] = track['id'] in liked_ids
@@ -260,7 +271,7 @@ class FetchYouTubeLinksView(APIView):
     def post(self, request):
         tracks = request.data.get('tracks', [])
         if not tracks:
-            return Response({"error": "Danh sách nhạc trống"}, status=status.HTTP_400_BAD_REQUEST)
+            return error_response("Track list is empty", "empty_track_list")
 
         engine = MusicTherapyEngine()
         enriched_tracks = engine.fetch_youtube_details(tracks)
@@ -320,7 +331,7 @@ class SwapConfirmView(APIView):
                 session_track.track = new_track
                 session_track.save()
             except SessionTrack.DoesNotExist:
-                return Response({"error": "Vị trí bài hát không tồn tại trong session"}, status=404)
+                return error_response("Track position not found in session", "session_track_not_found", status.HTTP_404_NOT_FOUND)
 
         return Response({"status": "success"}, status=status.HTTP_200_OK)
 
@@ -375,6 +386,7 @@ class UserStatsView(APIView):
         
         time_filter = request.query_params.get('filter', 'month')
         session_id = request.query_params.get('session_id')
+        lang = get_request_lang(request)
 
         liked_ids = set(user.liked_tracks.values_list('spotify_id', flat=True))
 
@@ -407,7 +419,7 @@ class UserStatsView(APIView):
             for st in sts:
                 iso_data.append({
                     "id": st.track.spotify_id,
-                    "name": f"B.{st.order_index}",
+                    "name": f"B.{st.order_index}" if lang == 'vi' else f"#{st.order_index}",
                     "title": st.track.title,           
                     "artist": st.track.artist,         
                     "image": st.track.album_cover,     
@@ -442,9 +454,9 @@ class UserStatsView(APIView):
                     m += 12
                     y -= 1
                 key = f"{m:02d}/{y}"
-                time_dict[key] = {"name": f"T{m}", "minutes": 0, "sort_key": f"{y}{m:02d}"}
+                time_dict[key] = {"name": MONTH_LABELS[lang][m - 1], "minutes": 0, "sort_key": f"{y}{m:02d}"}
         else:
-            weekday_map = {0: 'T2', 1: 'T3', 2: 'T4', 3: 'T5', 4: 'T6', 5: 'T7', 6: 'CN'}
+            weekday_map = dict(enumerate(WEEKDAY_LABELS[lang]))
             for i in range(days_back - 1, -1, -1):
                 d = now - timedelta(days=i)
                 key = d.strftime('%d/%m')
@@ -499,10 +511,10 @@ class UserStatsView(APIView):
         ).count()
         
         if sos_count > 0:
-            genre_data.append({"name": "Nhạc Trị liệu", "value": sos_count, "color": "#8CE4FF"})
+            genre_data.append({"name": tr(lang, 'genre_therapeutic'), "value": sos_count, "color": "#8CE4FF"})
 
         if other_count > 0:
-            genre_data.append({"name": "Khác", "value": other_count, "color": colors[4]})
+            genre_data.append({"name": tr(lang, 'genre_other'), "value": other_count, "color": colors[4]})
 
         return Response({
             "session_history": history_data, 
@@ -575,11 +587,11 @@ class BuildLikedTherapyView(APIView):
         liked_tracks = user.liked_tracks.all()
         
         if liked_tracks.count() < 14:
-            return Response({"error": "Cần tối thiểu 14 bài hát yêu thích để AI phân tích lộ trình"}, status=400)
+            return error_response("At least 14 liked tracks are required for the AI to analyze your path", "min_liked_tracks_required")
             
         latest_test = DassResult.objects.filter(user=user).order_by('-created_at').first()
         if not latest_test:
-            return Response({"error": "Hãy làm bài test tâm lý trước"}, status=400)
+            return error_response("Please take the psychological test first", "dass_required")
 
         engine = MusicTherapyEngine()
         
@@ -621,13 +633,14 @@ class ChatInteractView(APIView):
         user = request.user
         content = request.data.get('content')
         session_id = request.data.get('session_id') 
-        current_song = request.data.get('current_song', 'Không rõ') 
+        current_song = request.data.get('current_song', '') 
         user_name = request.user.display_name or request.user.username
 
         is_system_event = request.data.get('is_system_event', False)
+        lang = get_request_lang(request)
         
         if not content:
-            return Response({"error": "Thiếu nội dung"}, status=400)
+            return error_response("Missing content", "content_required")
 
         if session_id:
             session = ChatSession.objects.filter(id=session_id, user=user).first()
@@ -635,7 +648,7 @@ class ChatInteractView(APIView):
             session, _ = ChatSession.objects.get_or_create(user=user, is_active=True)
 
 
-        if session.title == "Cuộc trò chuyện mới" or not session.title:
+        if not session.title or session.title in DEFAULT_CHAT_TITLES:
             session.title = (content[:25] + '...') if len(content) > 25 else content
             session.save()
 
@@ -647,7 +660,7 @@ class ChatInteractView(APIView):
 
         content_to_engine = content
         if is_system_event:
-            content_to_engine = f"[CHỈ THỊ NGẦM TỪ HỆ THỐNG ĐỂ BOT CHỦ ĐỘNG]: {content}"
+            content_to_engine = f"[HIDDEN SYSTEM DIRECTIVE FOR THE BOT TO ACT PROACTIVELY]: {content}"
 
         from .models import DassResult
         dass = DassResult.objects.filter(user=request.user).order_by('-created_at').first()
@@ -661,7 +674,7 @@ class ChatInteractView(APIView):
 
         engine = ChatbotEngine()
         bot_response_text, is_emergency = engine.generate_response(
-            content_to_engine, history, user_name, user_age, current_song, dass_scores
+            content_to_engine, history, user_name, user_age, current_song, dass_scores, lang=lang
         )
 
         action = None
@@ -688,7 +701,7 @@ class ChatInteractView(APIView):
                 weights[track.genre] = round(new_w, 2)
                 prefs['genre_weights'] = weights
                 user.save()
-                print(f"AI tự động chấm điểm: Đã {action} thể loại {track.genre} (Trọng số mới: {new_w})")
+                print(f"AI auto-rating: {action} genre {track.genre} (new weight: {new_w})")
 
         bot_msg = ChatMessage.objects.create(session=session, sender=ChatMessage.Sender.BOT, content=bot_response_text)
 
@@ -733,15 +746,15 @@ class ManualChatSummaryView(APIView):
         
         session = ChatSession.objects.filter(id=session_id, user=user).first()
         if not session:
-            return Response({"error": "Phiên chat không tồn tại"}, status=404)
+            return error_response("Chat session not found", "chat_session_not_found", status.HTTP_404_NOT_FOUND)
 
         messages = ChatMessage.objects.filter(session=session).order_by('timestamp')
         if messages.count() < 2:
-            return Response({"error": "Đoạn chat quá ngắn để tóm tắt"}, status=400)
+            return error_response("Conversation is too short to summarize", "chat_too_short")
 
         from .services import ChatbotEngine
         engine = ChatbotEngine()
-        title, content = engine.summarize_to_diary(messages)
+        title, content = engine.summarize_to_diary(messages, lang=get_request_lang(request))
 
         if title and content:
             diary = DiaryEntry.objects.create(
@@ -752,11 +765,12 @@ class ManualChatSummaryView(APIView):
             )
             return Response({
                 "status": "success", 
-                "message": "Đã lưu vào nhật ký",
+                "message": "Saved to diary",
+                "code": "diary_saved",
                 "diary_id": diary.id
             })
         
-        return Response({"error": "AI không thể tóm tắt đoạn chat này"}, status=500)
+        return error_response("The AI could not summarize this conversation", "summary_failed", status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 
 class UpdateSessionMoodView(APIView):

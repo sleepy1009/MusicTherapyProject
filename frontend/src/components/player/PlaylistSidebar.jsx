@@ -3,8 +3,10 @@ import { motion } from 'framer-motion';
 import { Heart, RefreshCw } from 'lucide-react';
 import { usePlayer } from './PlayerContext';
 import { useDominantColor } from './CenterVisualizer'; 
+import { useTranslation } from 'react-i18next';
 
 const PlaylistSidebar = () => {
+    const { t } = useTranslation();
     const { 
         playlistData, currentIndex, setCurrentIndex, isPlaying, 
         devMode, mode, handleToggleLike, handleOpenSwap 
@@ -65,12 +67,12 @@ const PlaylistSidebar = () => {
                             <button onClick={(e) => { e.stopPropagation(); handleToggleLike(song, idx); }}
                                 className={`w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-medium transition-all ${song.isLiked ? 'text-rose-400' : 'text-gray-400'}`}>
                                 <Heart className={`w-3.5 h-3.5 ${song.isLiked ? 'fill-current' : ''}`} />
-                                {song.isLiked ? 'Đã thích' : 'thích'}
+                                {song.isLiked ? t('sidebar.liked') : t('sidebar.like')}
                             </button>
                         ) : (
                             <button onClick={(e) => { e.stopPropagation(); handleOpenSwap(idx); }}
                                 className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-[#8CE4FF] text-xs font-medium transition-colors">
-                                <RefreshCw className="w-3.5 h-3.5" /> Đổi bài
+                                <RefreshCw className="w-3.5 h-3.5" /> {t('sidebar.swap')}
                             </button>
                         )}
                     </div>

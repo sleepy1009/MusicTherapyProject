@@ -2,8 +2,10 @@ import React from 'react';
 import { Facebook, Mail, Phone, MapPin, Github } from 'lucide-react'; 
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const Footer = () => {
+  const { t } = useTranslation();
   const { pathname } = useLocation();
   
   const hideTextRoutes =['/player', '/onboarding', '/profile'];
@@ -44,22 +46,22 @@ const Footer = () => {
           <div className="space-y-4">
             <h3 className="text-2xl font-out-text font-bold text-white tracking-wider">MindMelody</h3>
             <p className="text-sm opacity-70 leading-relaxed">
-              Hệ thống gợi ý âm nhạc cá nhân hóa hỗ trợ điều chỉnh cảm xúc dựa trên trạng thái tâm lý và Nguyên lý ISO.
+              {t('footer.description')}
             </p>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-xl font-out-text font-semibold text-white">Khám phá</h3>
+            <h3 className="text-xl font-out-text font-semibold text-white">{t('footer.explore')}</h3>
             <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-primary transition-colors">Về MindMelody</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Cơ sở y khoa (ISO & DASS-21)</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Hướng dẫn sử dụng</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Quyền riêng tư & Bảo mật dữ liệu</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">{t('footer.about')}</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">{t('footer.medical')}</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">{t('footer.guide')}</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">{t('footer.privacy')}</a></li>
             </ul>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-xl font-out-text font-semibold text-white">Liên hệ</h3>
+            <h3 className="text-xl font-out-text font-semibold text-white">{t('footer.contact')}</h3>
             <ul className="space-y-3 text-sm">
               <li className="flex items-center justify-center md:justify-start gap-3">
                 <MapPin className="w-4 h-4 text-white " />

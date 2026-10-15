@@ -2,28 +2,34 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, PlayCircle, ArrowRight, Lock, Calendar, Music, Activity, Headphones, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { formatDate } from '../../utils/formatDate';
+import { normalizeLevel, isSevereLevel } from '../../utils/dassScoring';
 
+// label is the stored level (Vietnamese or English); normalizeLevel turns it into a key
 const getColorClass = (label) => {
-  switch (label) {
-    case 'Bình thường': return 'text-green-400';
-    case 'Nhẹ': return 'text-yellow-400';
-    case 'Vừa': return 'text-orange-400';
-    case 'Nặng': return 'text-red-400';
-    case 'Rất nặng': return 'text-rose-500';
+  switch (normalizeLevel(label)) {
+    case 'normal': return 'text-green-400';
+    case 'mild': return 'text-yellow-400';
+    case 'moderate': return 'text-orange-400';
+    case 'severe': return 'text-red-400';
+    case 'extreme': return 'text-rose-500';
     default: return 'text-white';
   }
 };
 
 const SEVERITY_WIDTH = {
-  'Bình thường': 15,
-  'Nhẹ': 30,
-  'Vừa': 55,
-  'Nặng': 80,
-  'Rất nặng': 100,
+  normal: 15,
+  mild: 30,
+  moderate: 55,
+  severe: 80,
+  extreme: 100,
 };
 
 const MetricBar = ({ label, value }) => {
-  const width = SEVERITY_WIDTH[value] ?? 0;
+  const { t } = useTranslation();
+  const levelKey = normalizeLevel(value);
+  const width = SEVERITY_WIDTH[levelKey] ?? 0;
   const barColor =
     width >= 80 ? 'bg-red-500' :
     width >= 55 ? 'bg-orange-400' :
@@ -34,7 +40,7 @@ const MetricBar = ({ label, value }) => {
     <div className="mb-1.5">
       <div className="flex justify-between text-[11px] text-gray-400 mb-1">
         <span>{label}</span>
-        <span>{value}</span>
+        <span>{levelKey ? t(`dass.levels.${levelKey}`) : value}</span>
       </div>
       <div className="h-[3px] w-full bg-white/10 rounded-full overflow-hidden">
         <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${width}%` }} />
@@ -57,7 +63,7 @@ const getMonthOptions = (history) => {
         
         if (!seen.has(key)) {
           seen.add(key);
-          options.push({ key, label: `Tháng ${month}/${year}` });
+          options.push({ key, month, year });
         }
     }
   });
@@ -73,6 +79,8 @@ const toISO = (session) => {
 };
 
 const TabTherapy = () => {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   const navigate = useNavigate();
   const API = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
@@ -121,7 +129,7 @@ const TabTherapy = () => {
         }));
         navigate('/player', { state: { playlist, mode: 'therapy' } });
       }
-    } catch (err) { console.error("Lỗi phát lại:", err); }
+    } catch (err) { console.error("Failed to replay session:", err); }
   };
 
   useEffect(() => {
@@ -140,7 +148,7 @@ const TabTherapy = () => {
               ...prev,
               hasTestResult: true,
               latestResult: {
-                date: new Date(latest.created_at).toLocaleDateString('vi-VN'),
+                createdAt: latest.created_at,
                 stress: latest.stress_level, stressScore: latest.stress_score, stressColor: getColorClass(latest.stress_level),
                 anxiety: latest.anxiety_level, anxietyScore: latest.anxiety_score, anxietyColor: getColorClass(latest.anxiety_level),
                 depression: latest.depression_level, depressionScore: latest.depression_score, depressionColor: getColorClass(latest.depression_level)
@@ -158,7 +166,7 @@ const TabTherapy = () => {
           }));
           setLikedCount(dataStats.liked_count || 0);
         }
-      } catch (err) { console.error("Lỗi lấy dữ liệu:", err); }
+      } catch (err) { console.error("Failed to load data:", err); }
     };
     fetchData();
   }, [API]);
@@ -194,6 +202,11 @@ const TabTherapy = () => {
 
   const monthOptions = useMemo(() => getMonthOptions(userState.history), [userState.history]);
 
+  const levelText = (value) => {
+    const key = normalizeLevel(value);
+    return key ? t(`dass.levels.${key}`) : value;
+  };
+
   const handleApply = () => {
     setAppliedFilter({ mode: filterMode, weekFrom, weekTo, month: selectedMonth });
   };
@@ -211,13 +224,13 @@ const TabTherapy = () => {
       {isLoading && (
         <div className="absolute inset-0 z-50 bg-[#1a1c23]/80 backdrop-blur-sm flex flex-col items-center justify-center rounded-3xl">
           <div className="w-10 h-10 border-4 border-[#41A67E] border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-[#66D0BC] font-bold text-sm">Đang chuẩn bị danh sách phát...</p>
+          <p className="text-[#66D0BC] font-bold text-sm">{t('profile.therapy.preparing')}</p>
         </div>
       )}
 
       <div className="border-b border-white/10 pb-4 mb-8">
         <h2 className="text-2xl font-bold text-transparent font-out-text bg-clip-text bg-gradient-to-r from-[#75ae88] to-[#cbf4d8] flex items-center gap-2">
-          <Headphones className="w-6 h-6 text-[#41A67E]" /> Góc nghe nhạc
+          <Headphones className="w-6 h-6 text-[#41A67E]" /> {t('profile.therapy.title')}
         </h2>
       </div>
 
@@ -233,12 +246,12 @@ const TabTherapy = () => {
           <div className="w-12 h-12 bg-[#41A67E]/20 rounded-2xl flex items-center justify-center mb-6 border border-[#41A67E]/30 text-[#66D0BC]">
             <Brain className="w-6 h-6" />
           </div>
-          <h3 className="text-xl font-bold text-white mb-2">Đánh giá tâm trạng</h3>
+          <h3 className="text-xl font-bold text-white mb-2">{t('profile.therapy.assess.title')}</h3>
           <p className="text-sm text-gray-400 mb-6 flex-1 leading-relaxed">
-            Tâm trạng của bạn thay đổi mỗi ngày. Làm một bài test ngắn để AI tạo playlist phù hợp nhất với hiện tại.
+            {t('profile.therapy.assess.body')}
           </p>
           <div className="flex items-center text-[#66D0BC] font-medium text-sm group-hover:translate-x-2 transition-transform">
-            Bắt đầu bài test <ArrowRight className="w-4 h-4 ml-2" />
+            {t('profile.therapy.assess.cta')} <ArrowRight className="w-4 h-4 ml-2" />
           </div>
         </motion.div>
 
@@ -251,33 +264,33 @@ const TabTherapy = () => {
           {!userState.hasTestResult && (
             <div className="absolute inset-0 z-20 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
               <Lock className="w-8 h-8 text-gray-400 mb-3" />
-              <p className="text-sm font-bold text-white mb-1">Chưa có dữ liệu</p>
-              <p className="text-xs text-gray-400">Bạn cần làm bài test ít nhất 1 lần để sử dụng tính năng này.</p>
+              <p className="text-sm font-bold text-white mb-1">{t('profile.therapy.prev.noData')}</p>
+              <p className="text-xs text-gray-400">{t('profile.therapy.prev.noDataBody')}</p>
             </div>
           )}
           <div className="w-12 h-12 bg-[#66D0BC]/20 rounded-2xl flex items-center justify-center mb-6 border border-[#66D0BC]/30 text-[#66D0BC]">
             <Activity className="w-6 h-6" />
           </div>
-          <h3 className="text-xl font-bold text-white mb-1">Dùng kết quả cũ</h3>
+          <h3 className="text-xl font-bold text-white mb-1">{t('profile.therapy.prev.title')}</h3>
           {userState.hasTestResult && (
             <p className="text-xs text-gray-400 mb-4 flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5" /> Cập nhật: {userState.latestResult.date}
+              <Calendar className="w-3.5 h-3.5" /> {t('profile.therapy.prev.updated', { date: formatDate(userState.latestResult.createdAt, lang) })}
             </p>
           )}
           <div className="flex-1 mb-6 space-y-2">
             {userState.hasTestResult ? (
               <>
                 <div className="flex justify-between text-sm bg-black/30 px-3 py-2 rounded-lg">
-                  <span className="text-[#ec5353]">Căng thẳng:</span>
-                  <span className={`font-medium ${userState.latestResult.stressColor}`}>{userState.latestResult.stress} ({userState.latestResult.stressScore})</span>
+                  <span className="text-[#ec5353]">{t('dass.categories.stress')}:</span>
+                  <span className={`font-medium ${userState.latestResult.stressColor}`}>{levelText(userState.latestResult.stress)} ({userState.latestResult.stressScore})</span>
                 </div>
                 <div className="flex justify-between text-sm bg-black/30 px-3 py-2 rounded-lg">
-                  <span className="text-[#758A93]">Lo âu:</span>
-                  <span className={`font-medium ${userState.latestResult.anxietyColor}`}>{userState.latestResult.anxiety} ({userState.latestResult.anxietyScore})</span>
+                  <span className="text-[#758A93]">{t('dass.categories.anxiety')}:</span>
+                  <span className={`font-medium ${userState.latestResult.anxietyColor}`}>{levelText(userState.latestResult.anxiety)} ({userState.latestResult.anxietyScore})</span>
                 </div>
                 <div className="flex justify-between text-sm bg-black/30 px-3 py-2 rounded-lg">
-                  <span className="text-[#685AFF]">Trầm cảm:</span>
-                  <span className={`font-medium ${userState.latestResult.depressionColor}`}>{userState.latestResult.depression} ({userState.latestResult.depressionScore})</span>
+                  <span className="text-[#685AFF]">{t('dass.categories.depression')}:</span>
+                  <span className={`font-medium ${userState.latestResult.depressionColor}`}>{levelText(userState.latestResult.depression)} ({userState.latestResult.depressionScore})</span>
                 </div>
               </>
             ) : (
@@ -285,7 +298,7 @@ const TabTherapy = () => {
             )}
           </div>
           <div className="flex items-center text-[#66D0BC] font-medium text-sm group-hover:translate-x-2 transition-transform">
-            Tạo playlist theo kết quả này <ArrowRight className="w-4 h-4 ml-2" />
+            {t('profile.therapy.prev.cta')} <ArrowRight className="w-4 h-4 ml-2" />
           </div>
         </motion.div>
 
@@ -297,21 +310,21 @@ const TabTherapy = () => {
           {likedCount < 14 && (
             <div className="absolute inset-0 z-20 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
               <Lock className="w-8 h-8 text-gray-400 mb-3" />
-              <p className="text-sm font-bold text-white mb-1">Chưa đủ dữ liệu</p>
-              <p className="text-xs text-gray-400">Bạn cần thích ít nhất 14 bài hát ({likedCount}/14) để sử dụng tính năng này.</p>
+              <p className="text-sm font-bold text-white mb-1">{t('profile.therapy.liked.notEnough')}</p>
+              <p className="text-xs text-gray-400">{t('profile.therapy.liked.notEnoughBody', { liked: likedCount })}</p>
             </div>
           )}
           <div className="w-12 h-12 bg-rose-500/20 rounded-2xl flex items-center justify-center mb-4 border border-rose-500/30 text-rose-400">
             <Heart className="w-6 h-6 fill-current" />
           </div>
-          <h3 className="text-xl font-bold text-white mb-2">Kho nhạc Yêu thích</h3>
+          <h3 className="text-xl font-bold text-white mb-2">{t('profile.therapy.liked.title')}</h3>
           <p className="text-sm text-gray-400 mb-4 flex-1 leading-relaxed">
-            Nghe tự do hoặc xây dựng lộ trình trị liệu theo luật ISO từ những bài hát bạn đã thả tim.
+            {t('profile.therapy.liked.body')}
           </p>
           <div className="mt-2 mb-4">
             <div className="flex justify-between text-xs text-gray-400 mb-1.5">
-              <span>Tiến độ</span>
-              <span>{likedCount}/14 bài</span>
+              <span>{t('profile.therapy.liked.progress')}</span>
+              <span>{t('profile.therapy.liked.tracks', { liked: likedCount })}</span>
             </div>
             <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
               <div className="bg-[#66D0BC] h-full transition-all" style={{ width: `${Math.min((likedCount / 14) * 100, 100)}%` }}></div>
@@ -330,7 +343,7 @@ const TabTherapy = () => {
               }}
               className="flex-1 py-2.5 rounded-xl font-bold text-xs transition-all bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-1.5"
             >
-              <Music className="w-4 h-4" /> Nghe Tự Do
+              <Music className="w-4 h-4" /> {t('profile.therapy.liked.freeListen')}
             </button>
             <button
               onClick={async (e) => {
@@ -347,7 +360,7 @@ const TabTherapy = () => {
               }}
               className="flex-1 py-2.5 rounded-xl font-bold text-xs transition-all bg-rose-500/20 hover:bg-rose-500/40 text-rose-300 flex items-center justify-center gap-1.5"
             >
-              <Brain className="w-4 h-4" /> Xây dựng Trị Liệu
+              <Brain className="w-4 h-4" /> {t('profile.therapy.liked.buildTherapy')}
             </button>
           </div>
         </motion.div>
@@ -358,7 +371,7 @@ const TabTherapy = () => {
 
           <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-[#41A67E]" /> Hành trình của bạn
+              <Calendar className="w-5 h-5 text-[#41A67E]" /> {t('profile.therapy.journey')}
             </h3>
             <div className="flex items-center gap-2">
               {['all', 'week', 'month'].map(m => (
@@ -371,7 +384,7 @@ const TabTherapy = () => {
                       : 'bg-white/5 border-white/15 text-gray-400 hover:bg-white/10 hover:text-white'
                   }`}
                 >
-                  {m === 'all' ? 'Tất cả' : m === 'week' ? 'Theo tuần' : 'Theo tháng'}
+                  {t(`profile.therapy.filter.${m}`)}
                 </button>
               ))}
             </div>
@@ -386,13 +399,13 @@ const TabTherapy = () => {
                 className="overflow-hidden"
               >
                 <div className="flex items-center gap-3 flex-wrap mb-4 bg-white/5 border border-white/10 rounded-2xl px-4 py-3">
-                  <span className="text-xs text-gray-400">Từ</span>
+                  <span className="text-xs text-gray-400">{t('profile.therapy.from')}</span>
                   <input
                     type="date" value={weekFrom} onChange={e => setWeekFrom(e.target.value)}
                     className="bg-black/30 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#41A67E]/60 transition-colors"
                   />
                   <span className="text-xs text-gray-500">—</span>
-                  <span className="text-xs text-gray-400">đến</span>
+                  <span className="text-xs text-gray-400">{t('profile.therapy.to')}</span>
                   <input
                     type="date" value={weekTo} onChange={e => setWeekTo(e.target.value)}
                     className="bg-black/30 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#41A67E]/60 transition-colors"
@@ -401,7 +414,7 @@ const TabTherapy = () => {
                     onClick={handleApply}
                     className="px-4 py-1.5 bg-[#41A67E] hover:bg-[#35906c] text-white text-xs font-bold rounded-full transition-colors"
                   >
-                    Lọc
+                    {t('profile.therapy.apply')}
                   </button>
                 </div>
               </motion.div>
@@ -415,21 +428,21 @@ const TabTherapy = () => {
                 className="overflow-hidden"
               >
                 <div className="flex items-center gap-3 flex-wrap mb-4 bg-white/5 border border-white/10 rounded-2xl px-4 py-3">
-                  <span className="text-xs text-gray-400">Tháng</span>
+                  <span className="text-xs text-gray-400">{t('profile.therapy.month')}</span>
                   <select
                     value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)}
                     className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#41A67E]/60 transition-colors"
                   >
-                    <option value="">-- Chọn tháng --</option>
+                    <option value="">{t('profile.therapy.selectMonth')}</option>
                     {monthOptions.map(opt => (
-                      <option key={opt.key} value={opt.key}>{opt.label}</option>
+                      <option key={opt.key} value={opt.key}>{t('profile.therapy.monthOption', { month: opt.month, year: opt.year })}</option>
                     ))}
                   </select>
                   <button
                     onClick={handleApply}
                     className="px-4 py-1.5 bg-[#41A67E] hover:bg-[#35906c] text-white text-xs font-bold rounded-full transition-colors"
                   >
-                    Lọc
+                    {t('profile.therapy.apply')}
                   </button>
                 </div>
               </motion.div>
@@ -437,11 +450,11 @@ const TabTherapy = () => {
           </AnimatePresence>
 
           {appliedFilter.mode !== 'all' && (
-            <p className="text-xs text-gray-500 mb-3">{filteredHistory.length} phiên</p>
+            <p className="text-xs text-gray-500 mb-3">{t('profile.therapy.sessions', { count: filteredHistory.length })}</p>
           )}
 
           {filteredHistory.length === 0 ? (
-            <p className="text-sm text-gray-500 italic py-4">Không có phiên nào trong khoảng thời gian này.</p>
+            <p className="text-sm text-gray-500 italic py-4">{t('profile.therapy.noSessions')}</p>
           ) : (
             <motion.div 
               ref={carouselRef} 
@@ -454,7 +467,7 @@ const TabTherapy = () => {
                 className="flex gap-3 w-max"
               >
                 {filteredHistory.map((session) => {
-                  const isSevere = session.stress?.includes('Nặng') || session.anxiety?.includes('Nặng') || session.depression?.includes('Nặng');
+                  const isSevere = isSevereLevel(session.stress) || isSevereLevel(session.anxiety) || isSevereLevel(session.depression);
                   return (
                     <motion.div
                       key={session.id}
@@ -470,17 +483,17 @@ const TabTherapy = () => {
                       <div className="relative z-10 pointer-events-none">
                           <p className="text-[11px] text-gray-500 mb-1">{session.date}</p>
                           <div className="flex items-center gap-2 mb-3">
-                          <span className="text-sm font-bold text-white">{session.track_count} bài hát</span>
+                          <span className="text-sm font-bold text-white">{t('checkpoint.tracks', { count: session.track_count })}</span>
                           <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
                               isSevere ? 'bg-rose-500/15 text-rose-400' : 'bg-[#41A67E]/15 text-[#66D0BC]'
                           }`}>
-                              {isSevere ? 'Nặng' : 'Ổn'}
+                              {isSevere ? t('profile.therapy.badgeSevere') : t('profile.therapy.badgeOk')}
                           </span>
                           </div>
 
-                          <MetricBar label="Căng thẳng" value={session.stress} />
-                          <MetricBar label="Lo âu" value={session.anxiety} />
-                          <MetricBar label="Trầm cảm" value={session.depression} />
+                          <MetricBar label={t('dass.categories.stress')} value={session.stress} />
+                          <MetricBar label={t('dass.categories.anxiety')} value={session.anxiety} />
+                          <MetricBar label={t('dass.categories.depression')} value={session.depression} />
                       </div>
                     </motion.div>
                   );

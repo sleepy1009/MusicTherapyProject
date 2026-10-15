@@ -5,8 +5,14 @@ import GooeyNav from '../reactbits/GooeyNav';
 import ChatBubble from './ChatBubble';
 import TypingIndicator from './TypingIndicator';
 import { DASS21_QUESTIONS, ANSWERS } from '../../utils/dass21_data';
+import { useTranslation } from 'react-i18next';
+
+// Works with a plain string (current data file) and with { en, vi } objects (after the data file is translated)
+const pick = (value, lang) => (value && typeof value === 'object' ? (value[lang] ?? value.en) : value);
 
 const ChatView = ({ onFinish }) => {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -44,11 +50,9 @@ const ChatView = ({ onFinish }) => {
       // Sau 1s hiện câu hỏi
       const timer = setTimeout(() => {
         setIsTyping(false);
-        const questionText = DASS21_QUESTIONS[currentIndex].text;
-        
         setMessages(prev => [
           ...prev, 
-          { id: `bot-${currentIndex}`, text: questionText, isBot: true }
+          { id: `bot-${currentIndex}`, qIndex: currentIndex, isBot: true }
         ]);
         
         // sau khi hiện câu hỏi 500ms thì hiện nút chọn (để user kịp đọc)
@@ -66,13 +70,11 @@ const ChatView = ({ onFinish }) => {
 
   //khi User chọn đáp án
   const handleAnswerSelect = (selectedIndex) => {
-    const selectedLabel = ANSWERS[selectedIndex].label;
-
     setShowOptions(false);
 
     setMessages(prev => [
       ...prev,
-      { id: `user-${currentIndex}`, text: selectedLabel, isBot: false }
+      { id: `user-${currentIndex}`, aIndex: selectedIndex, isBot: false }
     ]);
 
     setAnswers(prev => ({ 
@@ -99,7 +101,7 @@ const ChatView = ({ onFinish }) => {
   };
 
   const gooeyItems = ANSWERS.map(ans => ({
-    label: ans.label,
+    label: pick(ans.label, lang),
     href: "#"
   }));
 
@@ -110,7 +112,7 @@ const ChatView = ({ onFinish }) => {
       <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between bg-gradient-to-b from-gray-500/20 to-transparent pb-12 px-4 py-4">
         {currentIndex > 0 ? (
             <button onClick={handleBack} className="text-gray-400 hover:text-white flex items-center gap-2 text-sm transition-colors">
-                <ArrowLeft className="w-4 h-4" /> Quay lại
+                <ArrowLeft className="w-4 h-4" /> {t('common.back')}
             </button>
         ) : <div></div>}
         
@@ -122,7 +124,13 @@ const ChatView = ({ onFinish }) => {
       {/* VÙNG CHAT */}
       <div className="flex-grow overflow-y-auto custom-scrollbar bg-transparent pt-12 pb-40 px-2">
         {messages.map((msg) => (
-          <ChatBubble key={msg.id} message={msg.text} isBot={msg.isBot} />
+          <ChatBubble
+            key={msg.id}
+            message={msg.isBot
+              ? pick(DASS21_QUESTIONS[msg.qIndex].text, lang)
+              : pick(ANSWERS[msg.aIndex].label, lang)}
+            isBot={msg.isBot}
+          />
         ))}
         
         <AnimatePresence>

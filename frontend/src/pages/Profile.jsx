@@ -11,6 +11,8 @@ import TabTherapy from '../components/profile/TabTherapy';
 import { useToast } from '../components/ToastContext';
 
 import { useDocumentTitle } from '../utils/useDocumentTitle';
+import { useTranslation } from 'react-i18next';
+import { clearSession } from '../utils/clearSession';
 
 
 const INTERNAL_AVATARS = [
@@ -24,6 +26,7 @@ const INTERNAL_AVATARS = [
 ];
 
 const Profile = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const API = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
@@ -35,7 +38,7 @@ const Profile = () => {
 
   const toast = useToast();
 
-  useDocumentTitle('Hồ sơ');
+  useDocumentTitle(t('profile.docTitle'));
 
 
   const [userData, setUserData] = useState({
@@ -48,10 +51,10 @@ const Profile = () => {
   });
 
   const menuItems = [
-    { id: 'info', icon: User, label: 'Thông tin cá nhân' },
-    { id: 'stats', icon: BarChart2, label: 'Thống kê & Biểu đồ' },
-    { id: 'diary', icon: BookOpen, label: 'Nhật ký cảm xúc' },
-    { id: 'therapy', icon: Headphones, label: 'Góc Nghe Nhạc' },
+    { id: 'info', icon: User, label: t('profile.menu.info') },
+    { id: 'stats', icon: BarChart2, label: t('profile.menu.stats') },
+    { id: 'diary', icon: BookOpen, label: t('profile.menu.diary') },
+    { id: 'therapy', icon: Headphones, label: t('profile.menu.therapy') },
   ];
 
   useEffect(() => {
@@ -68,7 +71,7 @@ const Profile = () => {
         });
         if (res.ok) {
           const data = await res.json();
-          const loadedAvatar = data.avatar || AVAILABLE_AVATARS[0];
+          const loadedAvatar = data.avatar || INTERNAL_AVATARS[0];
           setUserData({
             name: data.display_name || data.username,
             email: data.email,
@@ -89,7 +92,7 @@ const Profile = () => {
             window.dispatchEvent(new Event('profileUpdated'));
         }
       } catch (err) {
-        console.error("Lỗi lấy dữ liệu:", err);
+        console.error("Failed to load profile:", err);
       }
     };
     fetchProfile();
@@ -128,19 +131,18 @@ const Profile = () => {
             storage.setItem('displayName', data.display_name || data.username);
             window.dispatchEvent(new Event('profileUpdated'));
 
-            toast.success("Đã cập nhật thông tin cá nhân.");
+            toast.success(t('profile.toast.updated'));
         }
     } catch (err) {
-        console.error("Lỗi lưu dữ liệu:", err);
-        toast.error("Lỗi cập nhật hồ sơ. Vui lòng thử lại.");
+        console.error("Failed to save profile:", err);
+        toast.error(t('profile.toast.updateFailed'));
     }
   };
 
   const handleLogout = () => {
-    localStorage.clear();
-    sessionStorage.clear();
+    clearSession(); // keeps the chosen language
     navigate('/');
-    toast.info("Đã đăng xuất an toàn.");
+    toast.info(t('profile.toast.loggedOut'));
   };
 
   const handleAvatarChange = async (newAvatar) => {
@@ -153,14 +155,14 @@ const Profile = () => {
         });
 
         if (!res.ok) {
-            console.error("Backend từ chối lưu avatar!");
-            toast.error("Không thể thay đổi ảnh đại diện.");
+            console.error("Backend refused to save the avatar!");
+            toast.error(t('profile.toast.avatarFailed'));
             return;
         }
 
         setUserData(prev => ({ ...prev, avatar: newAvatar }));
         setShowAvatarModal(false);
-        toast.success("Đổi ảnh đại diện thành công.");
+        toast.success(t('profile.toast.avatarChanged'));
 
         const storage = localStorage.getItem('token') ? localStorage : sessionStorage;
         storage.setItem('avatar', newAvatar);
@@ -246,9 +248,9 @@ const Profile = () => {
           </div>
 
           <div className="p-4 border-t border-white/10">
-            <button onClick={handleLogout} title={isCollapsed ? "Đăng xuất" : ""} className={`flex items-center gap-4 w-full px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors ${isCollapsed ? 'justify-center' : ''}`}>
+            <button onClick={handleLogout} title={isCollapsed ? t('header.logout') : ""} className={`flex items-center gap-4 w-full px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors ${isCollapsed ? 'justify-center' : ''}`}>
                 <LogOut className="w-5 h-5 flex-shrink-0" />
-                {!isCollapsed && <span className="font-medium text-sm">Đăng xuất</span>}
+                {!isCollapsed && <span className="font-medium text-sm">{t('header.logout')}</span>}
             </button>
           </div>
         </motion.div>
@@ -275,7 +277,7 @@ const Profile = () => {
                     className="w-full max-w-2xl bg-[#1a1c23] border border-white/20 rounded-3xl shadow-2xl overflow-hidden flex flex-col"
                 >
                     <div className="p-6 border-b border-white/10 flex items-center justify-between bg-white/5">
-                        <h3 className="text-xl font-bold text-white">Chọn Ảnh Đại Diện</h3>
+                        <h3 className="text-xl font-bold text-white">{t('profile.chooseAvatar')}</h3>
                         <button onClick={() => setShowAvatarModal(false)} className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors">
                             <X className="w-5 h-5" />
                         </button>

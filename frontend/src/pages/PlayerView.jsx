@@ -13,6 +13,7 @@ import PlaylistSidebar from '../components/player/PlaylistSidebar';
 import MediaController from '../components/player/MediaController';
 import ChatPanel from '../components/player/ChatPanel';
 import { useToast } from '../components/ToastContext';
+import { useTranslation } from 'react-i18next';
 
 import { useDocumentTitle } from '../utils/useDocumentTitle';
 import { useQuery } from '@tanstack/react-query'; 
@@ -20,6 +21,7 @@ import PlayerSkeleton from '../components/player/PlayerSkeleton';
 import SpaceErrorView from '../views/SpaceErrorView';
 
 const PlayerLayout = () => {
+    const { t } = useTranslation();
     const { 
         playlistData, currentSong, volume, isMuted,
         setIsPlaying, setDuration, setPlayerTarget, handleNext,
@@ -71,7 +73,7 @@ const PlayerLayout = () => {
         if (next >= 5) {
             setShowPlaylistDebug(true); 
             setPlaylistHeaderClicks(0);
-            toast.info("Đã kích hoạt chế độ NCKH.");
+            toast.info(t('player.researchMode'));
         }
     };
 
@@ -133,13 +135,13 @@ const PlayerLayout = () => {
                                             onClick={handlePlaylistHeaderClick}
                                             className="p-4 border-b border-white/10 font-out-text text-[#9ED3DC] flex items-center justify-between cursor-pointer select-none"
                                         >
-                                            <div className="flex items-center gap-2"><Music size={18} /> Danh sách phát</div>
+                                            <div className="flex items-center gap-2"><Music size={18} /> {t('player.playlistTitle')}</div>
                                             {showPlaylistDebug && (
                                                 <motion.button 
                                                     initial={{ scale: 0 }} animate={{ scale: 1 }}
                                                     className="text-[9px] bg-[#9ED3DC] text-black px-2 py-0.5 rounded font-bold uppercase tracking-tighter"
                                                 >
-                                                    NCKH Report
+                                                    {t('player.researchReport')}
                                                 </motion.button>
                                             )}
                                         </div>
@@ -150,7 +152,7 @@ const PlayerLayout = () => {
                                 {rightPanelMode === 'diary' && (
                                     <>
                                         <div className="p-4 border-b border-white/10 font-out-text text-rose-300 flex items-center gap-2">
-                                            <BookOpen size={18} /> Nhật Ký Cảm Xúc
+                                            <BookOpen size={18} /> {t('player.diaryTitle')}
                                         </div>
                                         <DiaryPanel />
                                     </>

@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Frown, Smile, Wind, Loader2 } from 'lucide-react';
 import { usePlayer } from './PlayerContext';
+import { useTranslation } from 'react-i18next';
 
 const MoodOverlay = ({ isVisible, type = 'before', onSubmit }) => {
+    const { t } = useTranslation();
     const [moodValue, setMoodValue] = useState(5);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const sliderRef = useRef(null);
@@ -32,11 +34,11 @@ const MoodOverlay = ({ isVisible, type = 'before', onSubmit }) => {
     };
 
     const getMoodFeedback = (value) => {
-        if (value <= 3) return { text: "Rất căng thẳng / Lo âu", emoji: "😣" };
-        if (value <= 5) return { text: "Hơi mệt mỏi / Căng thẳng nhẹ", emoji: "😫" };
-        if (value <= 7) return { text: "Bình thường", emoji: "🙂" };
-        if (value <= 9) return { text: "Thư giãn", emoji: "😌" };
-        return { text: "Hoàn toàn bình yên", emoji: "🧘‍♀️" };
+        if (value <= 3) return { text: t('moodOverlay.feedback.veryStressed'), emoji: "😣" };
+        if (value <= 5) return { text: t('moodOverlay.feedback.slightlyTired'), emoji: "😫" };
+        if (value <= 7) return { text: t('moodOverlay.feedback.normal'), emoji: "🙂" };
+        if (value <= 9) return { text: t('moodOverlay.feedback.relaxed'), emoji: "😌" };
+        return { text: t('moodOverlay.feedback.peaceful'), emoji: "🧘‍♀️" };
     };
 
     const buttonVariants = {
@@ -100,8 +102,8 @@ const MoodOverlay = ({ isVisible, type = 'before', onSubmit }) => {
                                 className="text-xl font-bold text-white mb-2 text-center leading-tight font-sans"
                             >
                                 {type === 'before' 
-                                    ? 'Hãy dành 10 giây để cảm nhận bản thân' 
-                                    : 'Phiên trị liệu kết thúc. Bạn cảm thấy thế nào?'}
+                                    ? t('moodOverlay.titleBefore') 
+                                    : t('moodOverlay.titleAfter')}
                             </motion.h3>
                             
                             <motion.p 
@@ -110,8 +112,8 @@ const MoodOverlay = ({ isVisible, type = 'before', onSubmit }) => {
                                 className="text-sm text-white/60 mb-8 text-center max-w-[320px] mx-auto"
                             >
                                 {type === 'before' 
-                                    ? 'Hãy nhắm mắt lại, hít một hơi thật sâu và lắng nghe cơ thể bạn' 
-                                    : 'Âm nhạc có giúp bạn giải tỏa căng thẳng và tìm lại cân bằng?'}
+                                    ? t('moodOverlay.subBefore') 
+                                    : t('moodOverlay.subAfter')}
                             </motion.p>
 
                             {!isSubmitting ? (
@@ -123,10 +125,10 @@ const MoodOverlay = ({ isVisible, type = 'before', onSubmit }) => {
                                         <div className="flex justify-between text-xs text-white/50 mb-3 px-1">
                                             <div className="flex items-center gap-1.5">
                                                 <Frown className="w-4 h-4" />
-                                                <span>Căng thẳng</span>
+                                                <span>{t('moodOverlay.stressed')}</span>
                                             </div>
                                             <div className="flex items-center gap-1.5">
-                                                <span>Thư giãn</span>
+                                                <span>{t('moodOverlay.relaxed')}</span>
                                                 <Smile className="w-4 h-4" />
                                             </div>
                                         </div>
@@ -178,7 +180,7 @@ const MoodOverlay = ({ isVisible, type = 'before', onSubmit }) => {
                                                 value={moodValue}
                                                 onChange={(e) => setMoodValue(parseInt(e.target.value))}
                                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                                aria-label="Đánh giá mức độ thư giãn"
+                                                aria-label={t('moodOverlay.ariaLabel')}
                                                 aria-valuetext={`${getMoodFeedback(moodValue).text} (${moodValue}/10)`}
                                             />
                                         </div>
@@ -211,7 +213,7 @@ const MoodOverlay = ({ isVisible, type = 'before', onSubmit }) => {
                                         }}
                                     >
                                         <span className="relative z-10 flex items-center justify-center gap-2">
-                                            {type === 'before' ? 'Bắt đầu phiên nghe' : 'Hoàn tất đánh giá'}
+                                            {type === 'before' ? t('moodOverlay.start') : t('moodOverlay.finish')}
                                         </span>
                                         <motion.div
                                             className="absolute inset-0 bg-white/5"
@@ -241,7 +243,7 @@ const MoodOverlay = ({ isVisible, type = 'before', onSubmit }) => {
                                     className="text-center text-white/60 text-sm flex items-center justify-center gap-2"
                                 >
                                     <Loader2 className="w-4 h-4 animate-spin" />
-                                    Đang lưu kết quả...
+                                    {t('moodOverlay.saving')}
                                 </motion.div>
                             )}
                         </div>

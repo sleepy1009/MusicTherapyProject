@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertCircle, HelpCircle, Trash2, X } from 'lucide-react';
+import i18n from '../i18n'; // used (not a hook) so defaults follow the language at call time
 
 const ConfirmContext = createContext();
 
@@ -11,8 +12,8 @@ export const ConfirmProvider = ({ children }) => {
         isOpen: false,
         title: '',
         message: '',
-        confirmText: 'Đồng ý',
-        cancelText: 'Hủy',
+        confirmText: '',
+        cancelText: '',
         type: 'danger', 
     });
 
@@ -22,10 +23,10 @@ export const ConfirmProvider = ({ children }) => {
         return new Promise((resolve) => {
             setConfirmState({
                 isOpen: true,
-                title: options.title || 'Xác nhận',
-                message: options.message || 'Bạn có chắc chắn không?',
-                confirmText: options.confirmText || 'Đồng ý',
-                cancelText: options.cancelText || 'Hủy',
+                title: options.title || i18n.t('confirmDialog.title'),
+                message: options.message || i18n.t('confirmDialog.message'),
+                confirmText: options.confirmText || i18n.t('confirmDialog.confirm'),
+                cancelText: options.cancelText || i18n.t('confirmDialog.cancel'),
                 type: options.type || 'danger',
             });
             setResolver(() => resolve);

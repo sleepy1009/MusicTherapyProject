@@ -11,6 +11,9 @@ from google import genai
 from google.genai import types
 import re
 import time
+from .localization import (
+    SUPPORTED_LANGS, DEFAULT_LANG, NO_SONG_VALUES, normalize_lang, tr,
+)
 
 class MusicTherapyEngine:
     def __init__(self):
@@ -26,7 +29,7 @@ class MusicTherapyEngine:
             'french', 'german', 'swedish', 'brazil', 'reggaeton', 'afrobeat'
         ]
 
-    def generate_therapy_playlist(self, user, dass_result):
+    def generate_therapy_playlist(self, user, dass_result, lang=DEFAULT_LANG):
         from .models import Track
         import random
 
@@ -97,7 +100,7 @@ class MusicTherapyEngine:
         conflict_msg = ""
         if dominant in ['A', 'S'] and any(g in self.high_energy_genres for g in liked):
             has_conflict = True
-            conflict_msg = "MindMelody nhận thấy bạn đang có chỉ số căng thẳng khá cao. Để đảm bảo an toàn, hệ thống đã tạm thời giảm bớt các bản nhạc điện tử mạnh mẽ trong sở thích của bạn. Hãy thả lỏng nhé."
+            conflict_msg = tr(lang, 'conflict_message')
 
         playlist = []
         liked_ids = set(user.liked_tracks.values_list('spotify_id', flat=True))
@@ -280,7 +283,7 @@ class MusicTherapyEngine:
                 else:
                     track['youtube_id'] = None
             except Exception as e:
-                print(f"Lỗi YouTube Search cho {track['title']}: {e}")
+                print(f"YouTube search error for {track['title']}: {e}")
                 track['youtube_id'] = None
             return track
 
@@ -351,22 +354,18 @@ class ChatbotEngine:
     def __init__(self):
         api_key = os.getenv('GEMINI_API_KEY')
         if not api_key:
-            raise ValueError("Lỗi: Không tìm thấy GEMINI_API_KEY.")
-            
+            raise ValueError("GEMINI_API_KEY not found.")
+
         self.client = genai.Client(api_key=api_key)
         self.model_name = 'gemini-3-flash-preview' # gemini-3-flash-preview, gemini-2.5-flash
-        
-        # FILE RAG 
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        rag_file_path = os.path.join(base_dir, 'clinical_guidelines.txt')
-        
-        try:
-            with open(rag_file_path, 'r', encoding='utf-8') as f:
-                self.rag_manual = f.read()
-        except FileNotFoundError:
-            # Fallback
-            self.rag_manual = "Hãy dùng Liệu pháp Nhận thức Hành vi (CBT) để hỗ trợ người dùng."
 
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+
+        # FILE RAG: one clinical guide per language (clinical_guidelines_en.txt / _vi.txt)
+        self.rag_manuals = {lang: self._load_rag_manual(base_dir, lang) for lang in SUPPORTED_LANGS}
+
+        # The blacklist is language-agnostic on purpose: injection phrases are blocked
+        # whatever the UI language is (a user can type English in the VI UI and vice versa).
         blacklist_path = os.path.join(base_dir, 'prompt_blacklist.txt')
         self.blacklist = []
         try:
@@ -375,106 +374,90 @@ class ChatbotEngine:
         except FileNotFoundError:
             self.blacklist = ["bỏ qua các lệnh", "ignore previous instructions", "viết code"]
 
-        self.system_prompt = """
-        BẠN ĐANG ĐẢM NHẬN 2 VAI TRÒ CÙNG LÚC. HÃY THỰC HIỆN THEO ĐÚNG THỨ TỰ SAU:
+        # Whole-phrase matching: "react as" no longer matches a phrase like "act as".
+        self._blacklist_patterns = [
+            re.compile(r'(?<!\w)' + re.escape(phrase) + r'(?!\w)')
+            for phrase in self.blacklist
+        ]
 
-        NHIỆM VỤ 1 (ƯU TIÊN TỐI CAO): NGƯỜI GÁC CỔNG AN TOÀN (SAFETY GATEKEEPER)
-        Phân tích ngữ nghĩa câu nói mới nhất của người dùng. Nếu có BẤT KỲ dấu hiệu ẩn dụ hoặc trực tiếp nào về việc:
-        - Muốn kết thúc cuộc sống, tự sát, giải thoát, tự làm đau bản thân.
-        - Cảm thấy tuyệt vọng cùng cực, gửi lời chào tạm biệt cuối cùng.
-        => BẠN BẮT BUỘC PHẢI DỪNG LẠI, TRẢ VỀ CHÍNH XÁC CHUỖI NÀY VÀ KHÔNG THÊM BẤT CỨ TỪ NÀO KHÁC: [EMERGENCY_TRIGGERED]
-        - Yêu cầu vượt ngoài phạm vi tâm lý (Làm toán, viết code, dịch thuật, hóa thân thành nhân vật khác) => TỪ CHỐI NGAY LẬP TỨC. Dùng câu: "Tôi là trợ lý tâm lý MindMelody. Tôi chỉ có thể giúp bạn giải quyết các vấn đề về cảm xúc và sức khỏe tinh thần."
+    @staticmethod
+    def _load_rag_manual(base_dir, lang):
+        candidates = [f'clinical_guidelines_{lang}.txt']
+        if lang == 'vi':
+            candidates.append('clinical_guidelines.txt')  # legacy file name
+        for name in candidates:
+            try:
+                with open(os.path.join(base_dir, name), 'r', encoding='utf-8') as f:
+                    return f.read()
+            except FileNotFoundError:
+                continue
+        return tr(lang, 'rag_fallback')
 
-        NHIỆM VỤ 2: TRỢ LÝ TÂM LÝ MindMelody (HYBRID THERAPIST: CARL ROGERS & CBT)
-        Chỉ khi câu nói của người dùng AN TOÀN, hãy đóng vai MindMelody. 
-        - Về thái độ: Áp dụng trường phái Carl Rogers (Không phán xét, thấu cảm sâu sắc, dùng kỹ thuật Phản chiếu - Mirroring cảm xúc).
-        - Về kỹ thuật: Bắt buộc tuân thủ phương pháp giải quyết vấn đề theo Cẩm nang Lâm sàng CBT (RAG) được cung cấp.        
-        """
+    @staticmethod
+    def _clean(value, max_len):
+        # user-controlled strings (song title, name) go into the prompt: flatten and cap them
+        return ' '.join(str(value or '').split())[:max_len]
 
     def _is_injection(self, text):
         text_lower = text.lower()
-        for phrase in self.blacklist:
-            # check ban
-            if phrase in text_lower:
-                return True
-        return False
+        return any(pattern.search(text_lower) for pattern in self._blacklist_patterns)
 
-    def generate_response(self, user_message, history, user_name, user_age, current_song, dass_scores):
+    def generate_response(self, user_message, history, user_name, user_age, current_song, dass_scores, lang=DEFAULT_LANG):
+        lang = normalize_lang(lang)
 
         if self._is_injection(user_message):
-            return "Tôi là trợ lý tâm lý MindMelody. Yêu cầu của bạn nằm ngoài phạm vi chuyên môn của tôi. Chúng ta có thể quay lại câu chuyện về cảm xúc của bạn chứ?", False
-        
+            return tr(lang, 'injection_reply'), False
+
         top_issue = max(dass_scores, key=dass_scores.get)
         severity = dass_scores[top_issue]
 
         # 1. DYNAMIC PERSONA LOGIC
-        persona_context = ""
         if user_age and 18 <= user_age <= 24:
-            persona_context = """
-            [ĐỐI TƯỢNG ĐẶC THÙ]: Người dùng là SINH VIÊN ĐẠI HỌC. 
-            Hãy chủ động liên hệ ngầm sự lo âu, căng thẳng của họ với bối cảnh học thuật (thi cử, deadline, nợ môn, định hướng tương lai, quan hệ bạn bè). Dùng ngôn từ thấu cảm, phù hợp với Gen Z.
-            """
+            persona_context = tr(lang, 'persona_student')
         else:
-            persona_context = """
-            [ĐỐI TƯỢNG ĐẶC THÙ]: Người trưởng thành. 
-            Hãy tập trung vào áp lực công việc, tài chính, gia đình và sự cân bằng cuộc sống.
-            """
+            persona_context = tr(lang, 'persona_adult')
 
         # 2. DASS-21
-        clinical_instruction = ""
         if top_issue == 'depression':
-            clinical_instruction = "Người dùng có dấu hiệu trầm cảm. Tuyệt đối không dùng 'Toxic Positivity' (Cố lên, vui lên). Hãy đồng ý rằng nỗi buồn của họ là hợp lý."
+            clinical_instruction = tr(lang, 'clinical_depression')
         elif top_issue == 'anxiety':
-            clinical_instruction = "Người dùng đang lo âu. Hãy dùng kỹ thuật Grounding (Neo giữ hiện tại). Tránh bàn về tương lai xa xôi."
+            clinical_instruction = tr(lang, 'clinical_anxiety')
         else:
-            clinical_instruction = "Người dùng bị stress quá tải. Hãy gợi ý thả lỏng cơ bắp và chia nhỏ vấn đề."
+            clinical_instruction = tr(lang, 'clinical_stress')
 
         # 3. Context - max 10 length
-        if current_song in ['Không rõ', 'Đang không nghe nhạc', '']:
-            song_instruction = "- Hiện tại chưa rõ người dùng đang nghe bài gì, TUYỆT ĐỐI KHÔNG BỊA TÊN BÀI HÁT, chỉ tập trung tư vấn cảm xúc."
+        song = self._clean(current_song, 120)
+        if song.lower() in NO_SONG_VALUES:
+            song_instruction = tr(lang, 'song_none')
         else:
-            song_instruction = f"- Hãy nhắc một cách tinh tế, tự nhiên về bài hát '{current_song}' để tăng sự đồng cảm."
+            song_instruction = tr(lang, 'song_known', song=song)
 
+        name = self._clean(user_name, 60)
         if len(history) == 0:
-            conversation_context = f"""
-            [NGỮ CẢNH]: Đây là CÂU CHÀO HỎI ĐẦU TIÊN của phiên chat. 
-            - Hãy chào {user_name}.
-            {song_instruction}
-            """
+            conversation_context = tr(lang, 'context_first', user_name=name, song_instruction=song_instruction)
         else:
-            conversation_context = f"""
-            [NGỮ CẢNH]: Cuộc trò chuyện ĐANG DIỄN RA. Người dùng: {user_name}.
-            {song_instruction}
-            - TUYỆT ĐỐI KHÔNG chào hỏi lại hay phân tích bài hát như một cỗ máy.
-            """
+            conversation_context = tr(lang, 'context_ongoing', user_name=name, song_instruction=song_instruction)
 
         # 4. SYSTEM PROMPT (RAG)
-        system_prompt = f"""
-        {self.system_prompt}
-        
-        [CẨM NANG LÂM SÀNG TỪ HỆ THỐNG RAG]:
-        {self.rag_manual}
-        
-        {persona_context}
-        {conversation_context}
-        [CHỈ THỊ DASS-21]: {clinical_instruction} (Mức độ: {severity}/42).
-        
-        [QUY TẮC BẮT BUỘC]:
-        1. Phản hồi dưới 80 chữ. Dùng câu hỏi gợi mở (Socratic).
-        2. Nếu phát hiện rủi ro tự hại => TRẢ VỀ: [EMERGENCY_TRIGGERED]
-        3. NHIỆM VỤ ĐÁNH GIÁ ÂM NHẠC: Nếu user chê nhạc => chèn [MUSIC_PREF: DISLIKE] ở cuối. Nếu khen => chèn [MUSIC_PREF: LIKE] ở cuối.
-        """
+        system_prompt = "\n\n".join([
+            tr(lang, 'system_prompt'),
+            tr(lang, 'rag_header') + "\n" + self.rag_manuals[lang],
+            persona_context,
+            conversation_context,
+            tr(lang, 'dass_directive', clinical=clinical_instruction, severity=severity),
+            tr(lang, 'rules'),
+        ])
 
         # 5.API
         messages = [
             types.Content(role="user", parts=[types.Part.from_text(text=system_prompt)]),
-            types.Content(role="model", parts=[types.Part.from_text(text="Đã hiểu cẩm nang RAG và hồ sơ Persona. Tôi sẽ tuân thủ nghiêm ngặt.")])
+            types.Content(role="model", parts=[types.Part.from_text(text=tr(lang, 'ack'))])
         ]
-        
+
         for msg in history:
             role = "user" if msg.sender == 'USER' else "model"
             messages.append(types.Content(role=role, parts=[types.Part.from_text(text=msg.content)]))
-            
+
         messages.append(types.Content(role="user", parts=[types.Part.from_text(text=user_message)]))
 
         max_retries = 3
@@ -487,13 +470,7 @@ class ChatbotEngine:
                 bot_text = response.text.strip()
 
                 if "[EMERGENCY_TRIGGERED]" in bot_text:
-                    emergency_msg = (
-                        "Tôi cảm nhận được bạn đang mang một nỗi đau quá lớn và vượt sức chịu đựng. Sự an toàn của bạn lúc này là điều quan trọng nhất. \n"
-                        "Đường dây nóng Ngày Mai: 096 306 1414 (Hỗ trợ thanh thiếu niên trầm cảm).\n "
-                        "Viện Sức khỏe Tâm thần Quốc gia: (024) 3576 5344 hoặc 0984 104 115.\n "
-                        "Hệ thống đã tự động kích hoạt nhạc nhẹ nhàng, hãy nhắm mắt lại và cố gắng hít thở sâu cùng tôi nhé."
-                    )
-                    return emergency_msg, True 
+                    return tr(lang, 'emergency_reply'), True
                 else:
                     return bot_text, False
 
@@ -502,31 +479,20 @@ class ChatbotEngine:
                 # 503 / 429
                 if "503" in error_str or "UNAVAILABLE" in error_str or "429" in error_str:
                     if attempt < max_retries - 1:
-                        time.sleep(2 ** attempt) 
+                        time.sleep(2 ** attempt)
                         continue
-                
-                print(f"Lỗi Gemini API: {error_str}")
-                return "Hệ thống đang xử lý quá nhiều luồng suy nghĩ. Bạn cho tôi vài giây để sắp xếp lại nhé.", False
+
+                print(f"Gemini API error: {error_str}")
+                return tr(lang, 'error_reply'), False
 
 
-    def summarize_to_diary(self, history_messages):
+    def summarize_to_diary(self, history_messages, lang=DEFAULT_LANG):
+        lang = normalize_lang(lang)
         if not history_messages or len(history_messages) < 2:
             return None, None
 
         conv_text = "\n".join([f"{msg.sender}: {msg.content}" for msg in history_messages])
-
-        prompt = f"""
-        Dưới đây là cuộc trò chuyện giữa tôi (USER) và chuyên viên tham vấn tâm lý (BOT).
-        Nhiệm vụ của bạn: Hãy đóng vai tôi (USER), viết một đoạn nhật ký ngắn (khoảng 80 chữ) để ghi lại cảm xúc của mình ngày hôm nay và hướng giải quyết mà tôi vừa nhận ra sau khi trò chuyện.
-        Và đặt một tiêu đề ngắn gọn (dưới 10 chữ).
-        
-        Bắt buộc trả về đúng định dạng sau, không thêm bất cứ từ ngữ nào khác:
-        TITLE: [Tiêu đề nhật ký]
-        CONTENT: [Nội dung nhật ký]
-
-        Cuộc trò chuyện:
-        {conv_text}
-        """
+        prompt = tr(lang, 'diary_prompt', conversation=conv_text)
 
         try:
             response = self.client.models.generate_content(
@@ -534,10 +500,10 @@ class ChatbotEngine:
                 contents=prompt
             )
             text = response.text.strip()
-            
-            title = "Nhật ký tự động"
+
+            title = tr(lang, 'diary_default_title')
             content = text
-            
+
             if "TITLE:" in text and "CONTENT:" in text:
                 parts = text.split("CONTENT:")
                 title_part = parts[0].replace("TITLE:", "").strip()
@@ -547,5 +513,5 @@ class ChatbotEngine:
 
             return title, content
         except Exception as e:
-            print("Lỗi AI khi tóm tắt nhật ký:", e)
+            print("AI error while summarizing diary:", e)
             return None, None

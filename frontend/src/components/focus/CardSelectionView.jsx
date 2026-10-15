@@ -3,9 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, RefreshCw, Shuffle } from 'lucide-react';
 import DecayCard from '../reactbits/DecayCard';
 import PlaylistDock from './PlaylistDock';
+import { useTranslation } from 'react-i18next';
 
 
 const CardSelectionView = ({ currentStep, handleSelectCard, handleBack, handleShuffle, displayedCards, stepData }) => {
+  const { t } = useTranslation();
   return (
     <div className="w-full h-full flex flex-col items-center justify-center relative overflow-hidden">
       
@@ -29,7 +31,7 @@ const CardSelectionView = ({ currentStep, handleSelectCard, handleBack, handleSh
             
             
             <p className="text-gray-300 text-lg font-light">
-            {stepData.desc}
+            {stepData.descKey ? t(stepData.descKey) : stepData.desc}
             </p>
         </motion.div>
       </div>
@@ -39,7 +41,7 @@ const CardSelectionView = ({ currentStep, handleSelectCard, handleBack, handleSh
           <div className="w-24">
               {currentStep > 0 && (
                   <button onClick={handleBack} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm font-medium">
-                      <ArrowLeft className="w-4 h-4" /> Quay lại
+                      <ArrowLeft className="w-4 h-4" /> {t('common.back')}
                   </button>
               )}
           </div>
@@ -48,7 +50,7 @@ const CardSelectionView = ({ currentStep, handleSelectCard, handleBack, handleSh
               onClick={handleShuffle}
               className="flex items-center gap-2 text-[#8CE4FF]/80 hover:text-[#8CE4FF] bg-white/5 hover:bg-white/10 px-4 py-2 mb-4 rounded-full border border-white/10 transition-all text-xs uppercase tracking-wider font-bold"
           >
-              <Shuffle className="w-3 h-3" /> Đổi bài khác
+              <Shuffle className="w-3 h-3" /> {t('cardSelection.shuffle')}
           </button>
           
           <div className="w-24"></div> 

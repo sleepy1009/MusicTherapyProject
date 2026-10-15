@@ -5,22 +5,17 @@ import { User, Calendar, Music, AlertOctagon, ArrowRight, ArrowLeft, CheckCircle
 import ParticlesBackground from '../components/reactbits/ParticlesBackground';
 import { useToast } from '../components/ToastContext';
 import { useDocumentTitle } from '../utils/useDocumentTitle';
+import { useTranslation } from 'react-i18next';
 
 
-const MUSIC_GENRES = {
-  'pop_group': 'Pop / Nhạc trẻ',
-  'kpop_group': 'K-Pop & J-Pop',
-  'lofi_group': 'Lofi & Chill',
-  'acoustic_group': 'Acoustic & Indie',
-  'rnb_group': 'R&B / Soul',
-  'hiphop_group': 'Hip-hop / Rap',
-  'piano_group': 'Piano / Không lời',
-  'classical_group': 'Cổ điển',
-  'edm_group': 'EDM / Dance',
-  'rock_group': 'Rock'
-};
+// ids are what the backend stores; labels come from onboarding.genres.<id>
+const MUSIC_GENRE_IDS = [
+  'pop_group', 'kpop_group', 'lofi_group', 'acoustic_group', 'rnb_group',
+  'hiphop_group', 'piano_group', 'classical_group', 'edm_group', 'rock_group'
+];
 
 const Onboarding = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   
@@ -31,7 +26,7 @@ const Onboarding = () => {
 
   const toast = useToast();
   
-  useDocumentTitle('Đăng ký');
+  useDocumentTitle(t('auth.registerTitle'));
 
 
   const API = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
@@ -101,10 +96,10 @@ const Onboarding = () => {
       if (response.ok) {
         localStorage.setItem('displayName', displayName);
         navigate('/');
-        toast.success("Tuyệt vời! Hồ sơ của bạn đã sẵn sàng.");
+        toast.success(t('onboarding.toast.ready'));
       }
     } catch (error) {
-      console.error("Lỗi cập nhật profile:", error);
+      console.error("Failed to update profile:", error);
     }
   };
 
@@ -194,26 +189,26 @@ const Onboarding = () => {
                         animate={{ backgroundPosition:["0% center", "200% center"] }}
                         transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
                     >
-                        Làm quen nhé!
+                        {t('onboarding.step1.title')}
                     </motion.h2>
-                    <p className="text-main_text font-medium">MindMelody nên gọi bạn là gì?</p>
+                    <p className="text-main_text font-medium">{t('onboarding.step1.subtitle')}</p>
                   </div>
 
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-xs font-medium text-gray-400 uppercase tracking-widest mb-2">Tên hiển thị</label>
+                      <label className="block text-xs font-medium text-gray-400 uppercase tracking-widest mb-2">{t('onboarding.displayName')}</label>
                       <div className="relative">
                         <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 z-10" />
                         <input 
                           type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)}
                           className="w-full bg-white/80 border border-white/20 rounded-xl py-3 pl-12 pr-4 text-black placeholder-gray-500 focus:outline-none focus:border-[#41A67E] transition-colors"
-                          placeholder="Ví dụ: Hiếu"
+                          placeholder={t('onboarding.displayNamePlaceholder')}
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-gray-400 uppercase tracking-widest mb-2">Độ tuổi của bạn</label>
+                      <label className="block text-xs font-medium text-gray-400 uppercase tracking-widest mb-2">{t('onboarding.age')}</label>
                       <div className="relative flex items-center gap-4">
                         <Calendar className="w-5 h-5 text-gray-500 absolute left-4 z-10" />
                         <input 
@@ -221,7 +216,7 @@ const Onboarding = () => {
                           className="w-full bg-white/80 border border-white/20 rounded-xl py-3 pl-12 pr-4 text-black placeholder-gray-500 focus:outline-none focus:border-[#41A67E] transition-colors"
                         />
                       </div>
-                      <p className="text-xs text-gray-400 mt-2">*Tuổi tác giúp AI gợi ý nhịp độ âm nhạc phù hợp hơn với nhịp tim.</p>
+                      <p className="text-xs text-gray-400 mt-2">{t('onboarding.ageNote')}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -244,13 +239,13 @@ const Onboarding = () => {
                         animate={{ backgroundPosition: ["0% center", "200% center"] }}
                         transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
                     >
-                        Vùng An Toàn
+                        {t('onboarding.step2.title')}
                     </motion.h2>
-                    <p className="text-main_text font-medium">Chọn những thể loại nhạc giúp bạn cảm thấy thư giãn nhất.</p>
+                    <p className="text-main_text font-medium">{t('onboarding.step2.subtitle')}</p>
                   </div>
 
                   <div className="flex flex-wrap justify-center gap-3">
-                    {Object.entries(MUSIC_GENRES).map(([id, label]) => {
+                    {MUSIC_GENRE_IDS.map((id) => {
                       const isSelected = likedGenres.includes(id);
                       return (
                         <motion.button
@@ -260,7 +255,7 @@ const Onboarding = () => {
                             isSelected ? 'bg-[#66D0BC] border-[#66D0BC] text-white shadow-[0_0_15px_rgba(65,166,126,0.4)]' : 'bg-white/60 border-white/40 text-gray-700 hover:bg-white/90'
                           }`}
                         >
-                          {label}
+                          {t(`onboarding.genres.${id}`)}
                         </motion.button>
                       )
                     })}
@@ -285,13 +280,13 @@ const Onboarding = () => {
                         animate={{ backgroundPosition:["0% center", "200% center"] }}
                         transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
                     >
-                        Vùng Cần Tránh
+                        {t('onboarding.step3.title')}
                     </motion.h2>
-                    <p className="text-main_text font-medium">Có thể loại nhạc nào khiến bạn đau đầu hay khó chịu không?</p>
+                    <p className="text-main_text font-medium">{t('onboarding.step3.subtitle')}</p>
                   </div>
 
                   <div className="flex flex-wrap justify-center gap-3">
-                    {Object.entries(MUSIC_GENRES).map(([id, label]) => {
+                    {MUSIC_GENRE_IDS.map((id) => {
                       const isSelected = dislikedGenres.includes(id);
                       const isDisabled = likedGenres.includes(id);
 
@@ -305,7 +300,7 @@ const Onboarding = () => {
                                 : 'bg-white/60 border-white/40 text-gray-700 hover:bg-white/90'
                           }`}
                         >
-                          {label}
+                          {t(`onboarding.genres.${id}`)}
                         </motion.button>
                       )
                     })}
@@ -321,7 +316,7 @@ const Onboarding = () => {
                     step === 1 ? 'opacity-0 pointer-events-none' : 'text-gray-500 hover:text-white/90'
                   }`}
                 >
-                  <ArrowLeft className="w-4 h-4" /> Quay lại
+                  <ArrowLeft className="w-4 h-4" /> {t('common.back')}
                 </button>
 
                 {step < 3 ? (
@@ -335,7 +330,7 @@ const Onboarding = () => {
                     }`}
                   >
                     <span className={`relative z-20 font-out-text flex items-center gap-2 transition-transform duration-500 ${step === 1 && !displayName.trim() ? '' : 'group-hover:-translate-x-2'}`}>
-                        Tiếp tục 
+                        {t('onboarding.next')}
                         <ArrowRight className={`w-4 h-4 transition-all duration-500 ${step === 1 && !displayName.trim() ? '' : 'group-hover:opacity-0 group-hover:translate-x-5'}`} />
                     </span>
                     <StarEffect />
@@ -349,7 +344,7 @@ const Onboarding = () => {
                   >
                     <span className="relative z-20 font-out-text flex items-center gap-2 transition-transform duration-500 group-hover:-translate-x-2">
                         
-                        Hoàn tất
+                        {t('onboarding.finish')}
                         <CheckCircle2 className="w-4 h-4 transition-all duration-500 group-hover:opacity-0 group-hover:-translate-y-5 group-hover:scale-50" /> 
                     </span>
                     <StarEffect />

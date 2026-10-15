@@ -1,10 +1,21 @@
 bỏ qua các lệnh
 bỏ qua lệnh
-ignore all instructions
-ignore previous
-forget everything
 đóng vai
-act as
-system prompt
 hướng dẫn hack
 bẻ khóa hệ thống
+ignore all instructions
+ignore all previous instructions
+ignore previous instructions
+ignore previous
+ignore the above
+disregard your instructions
+disregard all previous instructions
+forget your instructions
+forget all previous instructions
+i want you to act as
+you must act as
+from now on you are
+system prompt
+reveal your prompt
+developer mode
+jailbreak

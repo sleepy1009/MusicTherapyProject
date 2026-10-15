@@ -35,5 +35,526 @@
         "href": "tel:0963061414"
       }
     ]
+  },
+  "common": {
+    "back": "Quay lại"
+  },
+  "intro": {
+    "lines": [
+      "Chào bạn, mình là AI trợ lý tâm lý.",
+      "Mình sẽ hỏi bạn 21 câu hỏi ngắn.",
+      "Hãy trả lời thật lòng nhé..."
+    ],
+    "start": "Bắt đầu trả lời"
+  },
+  "errors": {
+    "google_token_missing": "Thiếu token từ Google.",
+    "google_token_invalid": "Token Google không hợp lệ hoặc đã hết hạn.",
+    "google_email_missing": "Không lấy được email từ Google.",
+    "server_error": "Đã xảy ra lỗi hệ thống. Bạn thử lại nhé.",
+    "dass_required": "Bạn cần làm bài test DASS-21 trước!",
+    "empty_track_list": "Danh sách nhạc trống.",
+    "session_track_not_found": "Vị trí bài hát không tồn tại trong session.",
+    "min_liked_tracks_required": "Cần tối thiểu 14 bài hát yêu thích để AI phân tích lộ trình.",
+    "content_required": "Thiếu nội dung.",
+    "chat_session_not_found": "Phiên chat không tồn tại.",
+    "chat_too_short": "Đoạn chat quá ngắn để tóm tắt.",
+    "summary_failed": "AI không thể tóm tắt đoạn chat này.",
+    "diary_saved": "Đã lưu vào nhật ký."
+  },
+  "chat": {
+    "welcomeNoSession": "Chào bạn, tôi là MindMelody. Hôm nay bạn cảm thấy thế nào?",
+    "welcomeEmptySession": "Chào bạn, tôi là MindMelody. Hôm nay bạn cảm thấy thế nào? Tôi luôn ở đây để lắng nghe.",
+    "newSessionStarted": "Phiên chat mới đã bắt đầu. Hãy chia sẻ bất cứ điều gì bạn đang suy nghĩ.",
+    "preMoodPrompt": "Giai điệu trị liệu đã bắt đầu. Hãy đánh giá mức độ căng thẳng hiện tại của bạn để tôi theo dõi nhé.",
+    "postMoodPrompt": "Giai điệu trị liệu đã khép lại. Hãy nhắm mắt hít thở sâu, và cho tôi biết mức độ căng thẳng của bạn lúc này.",
+    "currentMood": "Cảm xúc hiện tại: {{mood}}",
+    "panicReply": "Tôi nhận thấy bạn đang lo lắng. Hãy nhắm mắt lại và cùng thực hiện kỹ thuật thở 4-7-8. Nhạc đã được tự động điều chỉnh để làm dịu nhịp tim của bạn.",
+    "connectionError": "Kết nối đang gặp sự cố, bạn thông cảm nhé.",
+    "mood": {
+      "normal": "Bình thường",
+      "mild": "Nhẹ",
+      "moderate": "Vừa",
+      "severe": "Nặng",
+      "verySevere": "Rất nặng"
+    },
+    "toast": {
+      "deleted": "Đã xóa đoạn chat.",
+      "deleteFailed": "Lỗi kết nối, không thể xóa.",
+      "aiConnection": "Kết nối AI đang gặp sự cố.",
+      "summarySaved": "Đã đúc kết và lưu vào sổ nhật ký.",
+      "summaryFailed": "Không thể tóm tắt đoạn chat này."
+    },
+    "deleteConfirm": {
+      "title": "Xóa đoạn chat này?",
+      "message": "Đoạn chat này sẽ bị xóa vĩnh viễn khỏi nhật ký và không thể khôi phục.",
+      "confirm": "Xóa luôn",
+      "cancel": "Giữ lại"
+    },
+    "closeList": "Đóng danh sách",
+    "openList": "Mở danh sách đoạn chat",
+    "newSession": "Phiên mới",
+    "newSessionTitle": "Cuộc trò chuyện mới",
+    "deleteSession": "Xóa phiên này",
+    "assistantTitle": "Trợ lý MindMelody",
+    "summarizeTooltip": "AI sẽ đọc đoạn chat này và viết thành 1 bài Nhật ký",
+    "summarizing": "Đang ghi chép...",
+    "summarized": "Đã lưu nhật ký",
+    "summarize": "Tóm tắt & Lưu",
+    "help": "Trợ giúp",
+    "listening": "MindMelody đang lắng nghe...",
+    "placeholder": "Chia sẻ với tôi nhé (Shift + Enter để xuống dòng)...",
+    "disclaimer": "Tôi là AI hỗ trợ cảm xúc, không thay thế chuyên gia y tế."
+  },
+  "dass": {
+    "levels": {
+      "normal": "Bình thường",
+      "mild": "Nhẹ",
+      "moderate": "Vừa",
+      "severe": "Nặng",
+      "extreme": "Rất nặng"
+    },
+    "categories": {
+      "stress": "Căng thẳng",
+      "anxiety": "Lo âu",
+      "depression": "Trầm cảm"
+    }
+  },
+  "result": {
+    "analyzingTitle": "Đang phân tích cảm xúc...",
+    "analyzingSub": "MindMelody đang lượng hóa các chỉ số của bạn",
+    "title": "Kết quả DASS-21",
+    "descSos": "Chúng tôi nhận thấy bạn đang mang khá nhiều áp lực. Đừng lo lắng, hệ thống đã chuẩn bị một không gian trị liệu đặc biệt an toàn dành riêng cho bạn.",
+    "descNormal": "Kết quả của bạn đã sẵn sàng. Hãy lưu lại hồ sơ để thuật toán của chúng tôi tạo nên lộ trình âm nhạc phù hợp nhất nhé.",
+    "saving": "Đang thiết lập quỹ đạo...",
+    "enterSos": "Vào Không gian SOS",
+    "saveContinue": "Lưu & Tiếp tục",
+    "loginToActivate": "Đăng nhập để kích hoạt"
+  },
+  "checkpoint": {
+    "welcomeBack": "Chào mừng bạn quay lại",
+    "messageSevere": "Mình nhận thấy bạn đang trong trạng thái tâm lý nặng, hãy bấm nút SOS ở thanh điều hướng để nhận hotline nhé.",
+    "messageNormal": "Bạn muốn tiếp tục từ lần trước hay bắt đầu đánh giá lại hôm nay?",
+    "assessedOn": "Đánh giá ngày {{date}}",
+    "createPlaylist": "Tạo Playlist từ kết quả này",
+    "createPlaylistSub": "Dựa trên đánh giá ngày {{date}}",
+    "replayPlaylist": "Nghe lại playlist gần nhất",
+    "tracks_other": "{{count}} bài hát",
+    "takeNewTest": "Làm bài test mới hôm nay",
+    "takeNewTestSub": "Cập nhật tâm trạng hiện tại",
+    "safeSpace": "Vào Không Gian An Toàn",
+    "safeSpaceSub": "Lắng nghe âm thanh xoa dịu tâm trí"
+  },
+  "playlistDock": {
+    "title": "Playlist Của Bạn",
+    "selecting": "Đang Chọn...",
+    "emptyHint": "Chọn thẻ bài để thêm vào đây",
+    "regenerate": "Tạo lại",
+    "preparing": "Đang chuẩn bị...",
+    "start": "Bắt đầu nghe"
+  },
+  "cardSelection": {
+    "shuffle": "Đổi bài khác"
+  },
+  "focus": {
+    "loading": "Đang tải dữ liệu...",
+    "findingMusic": "AI đang phân tích và tìm nhạc cho bạn...",
+    "phases": {
+      "1": "Đồng điệu - Lắng nghe cảm xúc hiện tại của bạn.",
+      "2": "Đồng điệu - Thả lỏng và chấp nhận mọi suy nghĩ.",
+      "3": "Chuyển giao - Một chút nhịp điệu để xoa dịu.",
+      "4": "Chuyển giao - Từ từ chuyển hướng tâm trạng.",
+      "5": "Đích đến - Tìm lại sự bình yên trong tâm trí.",
+      "6": "Đích đến - Ánh sáng nhẹ nhàng và hy vọng.",
+      "7": "Đích đến - Chào đón nguồn năng lượng tích cực mới."
+    },
+    "toast": {
+      "playlistFailed": "Lỗi khi tạo playlist! Vui lòng thử lại.",
+      "musicFailed": "Có lỗi xảy ra khi xử lý nhạc."
+    },
+    "exitConfirm": {
+      "title": "Chú ý",
+      "message": "Bạn có chắc muốn thoát không? Quá trình hiện tại sẽ bị hủy.",
+      "confirm": "Thoát luôn",
+      "cancel": "Tiếp tục"
+    }
+  },
+  "moodOverlay": {
+    "titleBefore": "Hãy dành 10 giây để cảm nhận bản thân",
+    "titleAfter": "Phiên trị liệu kết thúc. Bạn cảm thấy thế nào?",
+    "subBefore": "Hãy nhắm mắt lại, hít một hơi thật sâu và lắng nghe cơ thể bạn",
+    "subAfter": "Âm nhạc có giúp bạn giải tỏa căng thẳng và tìm lại cân bằng?",
+    "stressed": "Căng thẳng",
+    "relaxed": "Thư giãn",
+    "ariaLabel": "Đánh giá mức độ thư giãn",
+    "start": "Bắt đầu phiên nghe",
+    "finish": "Hoàn tất đánh giá",
+    "saving": "Đang lưu kết quả...",
+    "feedback": {
+      "veryStressed": "Rất căng thẳng / Lo âu",
+      "slightlyTired": "Hơi mệt mỏi / Căng thẳng nhẹ",
+      "normal": "Bình thường",
+      "relaxed": "Thư giãn",
+      "peaceful": "Hoàn toàn bình yên"
+    }
+  },
+  "player": {
+    "skipTip": "Mẹo nhỏ: Tuân thủ thứ tự bài hát sẽ giúp hiệu quả trị liệu tốt nhất. Nếu giai điệu này không hợp, hãy dùng tính năng Đổi bài (Swap) ở danh sách phát thay vì Bỏ qua nhé!",
+    "proactiveToast": "MindMelody vừa gửi cho bạn một lời nhắn...",
+    "researchMode": "Đã kích hoạt chế độ NCKH.",
+    "researchReport": "NCKH Report",
+    "playlistTitle": "Danh sách phát",
+    "diaryTitle": "Nhật Ký Cảm Xúc"
+  },
+  "diary": {
+    "filter": {
+      "all": "Tất cả",
+      "week": "Tuần",
+      "month": "Tháng"
+    },
+    "titleRequired": "Bạn chưa đặt tiêu đề cho nhật ký kìa.",
+    "saved": "Đã lưu nhật ký thành công.",
+    "titlePlaceholder": "Tiêu đề...",
+    "themes": {
+      "default": "Mặc định",
+      "forest": "Rừng xanh",
+      "sunset": "Hoàng hôn",
+      "rain": "Mưa rơi"
+    }
+  },
+  "swap": {
+    "title": "Chọn bài hát thay thế",
+    "subtitle": "Bài hát hiện tại sẽ bị ghi nhận là \"Không thích\".",
+    "calculating": "Đang tính toán Vector tìm bài phù hợp...",
+    "swapThis": "Đổi bài này"
+  },
+  "visualizer": {
+    "tips": [
+      "Hãy thử hít vào 4 giây, giữ 4 giây, thở ra 4 giây...",
+      "Nhắm mắt lại và tập trung vào nhịp điệu của âm nhạc...",
+      "Mọi căng thẳng rồi sẽ qua, bạn đang làm rất tốt."
+    ]
+  },
+  "media": {
+    "seekTip": "Để âm nhạc phát huy tối đa tác dụng trị liệu, bạn nên nghe tuần tự nhé.",
+    "pipUnsupported": "Trình duyệt của bạn không hỗ trợ hoặc đang chặn tính năng Picture-in-Picture.",
+    "liked": "Đã thích!",
+    "shuffle": "Phát ngẫu nhiên",
+    "repeatOff": "Tắt lặp lại",
+    "repeatAll": "Lặp lại tất cả",
+    "repeatOne": "Lặp lại một bài",
+    "openMiniPlayer": "Mở Mini Player"
+  },
+  "sidebar": {
+    "liked": "Đã thích",
+    "like": "thích",
+    "swap": "Đổi bài"
+  },
+  "auth": {
+    "loginTitle": "Đăng nhập",
+    "registerTitle": "Đăng ký",
+    "loginHeading": "Đăng Nhập",
+    "registerHeading": "Đăng Ký",
+    "username": "Tên đăng nhập",
+    "usernameOrEmailPlaceholder": "Nhập tên đăng nhập hoặc email",
+    "usernamePlaceholder": "Nhập tên đăng nhập",
+    "emailLabel": "Email",
+    "emailPlaceholder": "Nhập email của bạn",
+    "password": "Mật khẩu",
+    "rememberMe": "Ghi nhớ đăng nhập",
+    "forgotPassword": "Quên mật khẩu?",
+    "loginButton": "Đăng nhập",
+    "registerButton": "Đăng ký",
+    "processing": "Đang xử lý...",
+    "or": "Hoặc",
+    "loginWithGoogle": "Đăng nhập với Google",
+    "registerWithGoogle": "Đăng ký với Google",
+    "noAccount": "Chưa có tài khoản?",
+    "registerNow": "Đăng ký ngay",
+    "haveAccount": "Đã có tài khoản?",
+    "loginNow": "Đăng nhập ngay",
+    "toast": {
+      "loginSuccess": "Đăng nhập thành công!",
+      "googleLoginSuccess": "Đăng nhập bằng Google thành công!"
+    },
+    "passwordRule": {
+      "upper": "1 chữ hoa",
+      "lower": "1 chữ thường",
+      "number": "1 số",
+      "special": "1 ký tự đặc biệt"
+    },
+    "errors": {
+      "tooManyFailed": "Đăng nhập thất bại quá nhiều, thử lại sau...",
+      "emptyCredentials": "Tên đăng nhập và mật khẩu không được để trống!",
+      "usernameLength": "Tên người dùng phải có từ 3 đến 20 ký tự.",
+      "passwordLength": "Mật khẩu phải có từ 8 đến 32 ký tự.",
+      "invalidCredentials": "Sai thông tin đăng nhập hoặc mật khẩu!",
+      "loginFailed": "Đăng nhập thất bại.",
+      "tooManyAttempts": "Thử quá nhiều lần. Vui lòng quay lại sau.",
+      "connection": "Đã xảy ra lỗi kết nối đến máy chủ!",
+      "serverAuth": "Lỗi xác thực từ Server.",
+      "serverConnection": "Lỗi kết nối máy chủ.",
+      "googleCancelled": "Đăng nhập Google bị hủy.",
+      "emptyFields": "Tất cả các trường không được trống.",
+      "invalidEmail": "Vui lòng nhập địa chỉ email hợp lệ.",
+      "registerFailed": "Đăng ký thất bại. Vui lòng thử lại.",
+      "cannotConnect": "Không thể kết nối đến máy chủ. Vui lòng thử lại sau.",
+      "passwordRequirements": "Mật khẩu phải chứa ít nhất: {{list}}."
+    }
+  },
+  "onboarding": {
+    "step1": {
+      "title": "Làm quen nhé!",
+      "subtitle": "MindMelody nên gọi bạn là gì?"
+    },
+    "step2": {
+      "title": "Vùng An Toàn",
+      "subtitle": "Chọn những thể loại nhạc giúp bạn cảm thấy thư giãn nhất."
+    },
+    "step3": {
+      "title": "Vùng Cần Tránh",
+      "subtitle": "Có thể loại nhạc nào khiến bạn đau đầu hay khó chịu không?"
+    },
+    "displayName": "Tên hiển thị",
+    "displayNamePlaceholder": "Ví dụ: Hiếu",
+    "age": "Độ tuổi của bạn",
+    "ageNote": "*Tuổi tác giúp AI gợi ý nhịp độ âm nhạc phù hợp hơn với nhịp tim.",
+    "next": "Tiếp tục",
+    "finish": "Hoàn tất",
+    "toast": {
+      "ready": "Tuyệt vời! Hồ sơ của bạn đã sẵn sàng."
+    },
+    "genres": {
+      "pop_group": "Pop / Nhạc trẻ",
+      "kpop_group": "K-Pop & J-Pop",
+      "lofi_group": "Lofi & Chill",
+      "acoustic_group": "Acoustic & Indie",
+      "rnb_group": "R&B / Soul",
+      "hiphop_group": "Hip-hop / Rap",
+      "piano_group": "Piano / Không lời",
+      "classical_group": "Cổ điển",
+      "edm_group": "EDM / Dance",
+      "rock_group": "Rock"
+    }
+  },
+  "hero": {
+    "line1a": "Đừng để",
+    "line1b": "âu lo",
+    "line2a": "lấn át",
+    "line2b": "giai điệu sống",
+    "feature1": "Sàng lọc tâm lý với câu hỏi <b>DASS-21</b>",
+    "feature2": "áp dụng quy tắc <b>ISO</b> giúp điều hòa cảm xúc của bạn",
+    "feature3": "Nghe nhạc <b>thư giãn</b>, viết nhật ký <b>riêng tư</b> và tâm sự với <b>Chatbot</b>",
+    "start": "Bắt đầu",
+    "learnMore": "Tìm hiểu",
+    "demoTitle": "MindMelody hoạt động như nào?",
+    "demoSubtitle": "Cuộn xuống để xem từng bước",
+    "steps": {
+      "1": {
+        "title": "1. Sàng lọc tâm lý",
+        "body": "Bạn sẽ trò chuyện với AI Mascot qua một bài test DASS-21 ngắn gọn. Kết quả này giúp đo lường chính xác mức độ Căng thẳng, Lo âu và Trầm cảm của bạn ở thời điểm hiện tại.",
+        "note": "* Bạn cần đăng nhập với thông tin cơ bản để hệ thống có thể gợi ý chuẩn xác nhất."
+      },
+      "2": {
+        "title": "2. Tạo danh sách nhạc",
+        "body": "Hệ thống áp dụng nguyên lý ISO, bắt đầu bằng những bài hát có nhịp điệu đồng điệu với nỗi buồn của bạn, sau đó từ từ kéo nhịp điệu và năng lượng lên cao dần để cải thiện tâm trạng."
+      },
+      "3": {
+        "title": "3. Lắng nghe & Giải tỏa",
+        "body": "Đắm chìm trong không gian âm nhạc tùy chỉnh. Bạn có thể vừa nghe nhạc, vừa viết nhật ký cảm xúc, kết hợp trò chuyện với Chatbot AI được thiết kế riêng như một người bạn đồng hành."
+      },
+      "4": {
+        "title": "4. Theo dõi tiến trình",
+        "body": "Truy cập trang cá nhân của bạn để theo dõi hành trình chữa lành. Từ các biểu đồ biến thiên cảm xúc DASS-21 cho tới phân tích thể loại nhạc bạn đã nghe."
+      }
+    },
+    "shootMe": "Bắn tôi đi!"
+  },
+  "profile": {
+    "docTitle": "Hồ sơ",
+    "menu": {
+      "info": "Thông tin cá nhân",
+      "stats": "Thống kê & Biểu đồ",
+      "diary": "Nhật ký cảm xúc",
+      "therapy": "Góc Nghe Nhạc"
+    },
+    "toast": {
+      "updated": "Đã cập nhật thông tin cá nhân.",
+      "updateFailed": "Lỗi cập nhật hồ sơ. Vui lòng thử lại.",
+      "loggedOut": "Đã đăng xuất an toàn.",
+      "avatarFailed": "Không thể thay đổi ảnh đại diện.",
+      "avatarChanged": "Đổi ảnh đại diện thành công."
+    },
+    "chooseAvatar": "Chọn Ảnh Đại Diện",
+    "info": {
+      "title": "Thông tin cá nhân",
+      "edit": "Chỉnh sửa",
+      "cancel": "Hủy",
+      "save": "Lưu thay đổi",
+      "changeAvatar": "Đổi Avatar",
+      "changePassword": "Đổi mật khẩu",
+      "basicInfo": "Thông tin cơ bản",
+      "displayName": "Tên hiển thị",
+      "age": "Độ tuổi",
+      "ageYears": "{{age}} tuổi",
+      "linkedEmail": "Email liên kết (Không thể đổi)",
+      "musicInfo": "Thông tin âm nhạc",
+      "clickToChange": "* Click để đổi trạng thái:",
+      "like": "Thích",
+      "dislike": "Ghét",
+      "neutral": "Bình thường",
+      "safeZone": "Vùng an toàn (Yêu thích):",
+      "avoid": "Cần tránh (Trigger):",
+      "notSet": "Chưa thiết lập",
+      "none": "Không có"
+    },
+    "stats": {
+      "loading": "Đang tải dữ liệu biểu đồ...",
+      "title": "Thống kê & biểu đồ",
+      "filter": {
+        "week": "7 Ngày qua",
+        "month": "30 Ngày qua",
+        "year": "1 Năm qua"
+      },
+      "emptyTitle": "Chưa có dữ liệu phân tích",
+      "emptyBody": "Hãy làm test DASS-21 ít nhất 1 lần để hệ thống bắt đầu theo dõi sức khỏe tinh thần của bạn nhé.",
+      "noDataInRange": "Không có dữ liệu trong khoảng thời gian này",
+      "dataOnDate": "Dữ liệu ngày: {{date}}",
+      "fromTo": "Từ {{from}} đến {{to}}",
+      "averaged": "- Đã tính trung bình các lần test cùng thời điểm",
+      "dassTitle": "Biến thiên Tâm lý (DASS-21)",
+      "noTests": "Không có bài test nào trong khoảng thời gian này.",
+      "therapyTime": "Thời gian trị liệu",
+      "minutes": "Phút",
+      "topGenres": "Thể loại hay nghe",
+      "isoTitle": "Đường cong Đồng bộ Cảm xúc",
+      "isoSub": "Năng lượng, Độ tích cực và Nhịp độ (BPM)",
+      "sessionOption": "Ngày {{date}} ({{stress}} / {{anxiety}})",
+      "valence": "Độ Tích Cực (0-1)",
+      "energy": "Năng lượng (0-1)",
+      "tempo": "Nhịp độ (BPM)"
+    },
+    "diary": {
+      "title": "Nhật ký cảm xúc",
+      "filter": {
+        "all": "Tất cả",
+        "week": "Tuần này",
+        "month": "Tháng này"
+      },
+      "new": "Viết mới",
+      "emptyTitle": "Bạn chưa có dòng nhật ký nào.",
+      "emptyBody": "Hãy bắt đầu ghi lại cảm xúc của ngày hôm nay nhé.",
+      "noneInRange": "Không tìm thấy nhật ký nào trong thời gian này.",
+      "deleteTitle": "Xóa nhật ký",
+      "back": "Trở về",
+      "background": "Nền:",
+      "delete": "Xóa",
+      "save": "Lưu",
+      "titlePlaceholder": "Tiêu đề nhật ký...",
+      "bodyPlaceholder": "Hôm nay bạn cảm thấy thế nào? Hãy viết ra đây nhé...",
+      "toast": {
+        "deleted": "Đã xóa trang nhật ký.",
+        "saved": "Đã lưu nhật ký."
+      },
+      "deleteConfirm": {
+        "title": "Xóa trang nhật ký?",
+        "message": "Trang nhật ký này sẽ bị xóa vĩnh viễn và không thể khôi phục. Bạn có chắc chắn không?",
+        "confirm": "Xóa luôn",
+        "cancel": "Giữ lại"
+      }
+    },
+    "therapy": {
+      "title": "Góc nghe nhạc",
+      "preparing": "Đang chuẩn bị danh sách phát...",
+      "assess": {
+        "title": "Đánh giá tâm trạng",
+        "body": "Tâm trạng của bạn thay đổi mỗi ngày. Làm một bài test ngắn để AI tạo playlist phù hợp nhất với hiện tại.",
+        "cta": "Bắt đầu bài test"
+      },
+      "prev": {
+        "noData": "Chưa có dữ liệu",
+        "noDataBody": "Bạn cần làm bài test ít nhất 1 lần để sử dụng tính năng này.",
+        "title": "Dùng kết quả cũ",
+        "updated": "Cập nhật: {{date}}",
+        "cta": "Tạo playlist theo kết quả này"
+      },
+      "liked": {
+        "notEnough": "Chưa đủ dữ liệu",
+        "notEnoughBody": "Bạn cần thích ít nhất 14 bài hát ({{liked}}/14) để sử dụng tính năng này.",
+        "title": "Kho nhạc Yêu thích",
+        "body": "Nghe tự do hoặc xây dựng lộ trình trị liệu theo luật ISO từ những bài hát bạn đã thả tim.",
+        "progress": "Tiến độ",
+        "tracks": "{{liked}}/14 bài",
+        "freeListen": "Nghe Tự Do",
+        "buildTherapy": "Xây dựng Trị Liệu"
+      },
+      "journey": "Hành trình của bạn",
+      "filter": {
+        "all": "Tất cả",
+        "week": "Theo tuần",
+        "month": "Theo tháng"
+      },
+      "from": "Từ",
+      "to": "đến",
+      "apply": "Lọc",
+      "month": "Tháng",
+      "selectMonth": "-- Chọn tháng --",
+      "monthOption": "Tháng {{month}}/{{year}}",
+      "sessions_other": "{{count}} phiên",
+      "noSessions": "Không có phiên nào trong khoảng thời gian này.",
+      "badgeSevere": "Nặng",
+      "badgeOk": "Ổn"
+    }
+  },
+  "consent": {
+    "title": "Đồng ý điều khoản",
+    "subtitle": "MindMelody - Hệ thống hỗ trợ tâm lý AI",
+    "s1": {
+      "title": "1. Mục đích nghiên cứu",
+      "body": "Hệ thống này là sản phẩm thuộc đề tài nghiên cứu khoa học. Chúng tôi sử dụng âm nhạc và AI (theo nguyên lý ISO Principle) để hỗ trợ điều chỉnh cảm xúc cho sinh viên. Dữ liệu của bạn giúp chúng tôi đánh giá tính hiệu quả của thuật toán."
+    },
+    "s2": {
+      "title": "2. Dữ liệu chúng tôi thu thập",
+      "item1": "Chỉ số tâm lý từ bài test DASS-21.",
+      "item2": "Hành vi tương tác với âm nhạc (Bỏ qua, Yêu thích).",
+      "item3": "Nội dung hội thoại với trợ lý AI (được mã hóa)."
+    },
+    "s3": {
+      "title": "3. Cam kết bảo mật & Quyền riêng tư",
+      "body": "Mọi dữ liệu cá nhân của bạn được mã hóa. Danh tính thật của bạn không được sử dụng trong các báo cáo khoa học. Chúng tôi cam kết không chia sẻ dữ liệu này cho bất kỳ bên thứ ba nào ngoài mục đích nghiên cứu."
+    },
+    "s4": {
+      "title": "4. Quy tắc an toàn (SOS)",
+      "body": "Lưu ý: MindMelody là trợ lý hỗ trợ cảm xúc, không phải bác sĩ y khoa hay chuyên viên tâm lý. Nếu hệ thống phát hiện các dấu hiệu nguy cơ tự hại, chúng tôi sẽ tự động kích hoạt chế độ hỗ trợ khẩn cấp và cung cấp thông tin liên hệ y tế chính thống."
+    },
+    "agree": "Tôi đã đọc, hiểu rõ các điều khoản và đồng ý cung cấp dữ liệu cho mục đích nghiên cứu.",
+    "start": "Bắt đầu hành trình"
+  },
+  "footer": {
+    "description": "Hệ thống gợi ý âm nhạc cá nhân hóa hỗ trợ điều chỉnh cảm xúc dựa trên trạng thái tâm lý và Nguyên lý ISO.",
+    "explore": "Khám phá",
+    "about": "Về MindMelody",
+    "medical": "Cơ sở y khoa (ISO & DASS-21)",
+    "guide": "Hướng dẫn sử dụng",
+    "privacy": "Quyền riêng tư & Bảo mật dữ liệu",
+    "contact": "Liên hệ"
+  },
+  "confirmDialog": {
+    "title": "Xác nhận",
+    "message": "Bạn có chắc chắn không?",
+    "confirm": "Đồng ý",
+    "cancel": "Hủy"
+  },
+  "spaceError": {
+    "404": {
+      "title": "LẠC TRONG VŨ TRỤ",
+      "message": "Tọa độ không gian này không tồn tại. Có vẻ như bạn đã đi quá xa khỏi quỹ đạo MindMelody.",
+      "action": "Về trang chủ"
+    },
+    "500": {
+      "title": "MẤT TÍN HIỆU",
+      "message": "Trạm điều khiển (server) đang từ chối kết nối hoặc đường truyền bị nhiễu. Hãy thử lại sau!",
+      "action": "Thử lại"
+    }
   }
 }

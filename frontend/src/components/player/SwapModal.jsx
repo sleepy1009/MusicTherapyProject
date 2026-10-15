@@ -2,8 +2,10 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RefreshCw, X } from 'lucide-react';
 import { usePlayer } from './PlayerContext';
+import { useTranslation } from 'react-i18next';
 
 const SwapModal = () => {
+    const { t } = useTranslation();
     const { swapState, setSwapState, handleConfirmSwap, devMode } = usePlayer();
 
     return (
@@ -17,8 +19,8 @@ const SwapModal = () => {
                         
                         <div className="flex justify-between items-center mb-6">
                             <div>
-                                <h3 className="text-xl font-bold text-white flex items-center gap-2"><RefreshCw className="w-5 h-5 text-[#8CE4FF]" /> Chọn bài hát thay thế</h3>
-                                <p className="text-xs text-gray-400 mt-1">Bài hát hiện tại sẽ bị ghi nhận là "Không thích".</p>
+                                <h3 className="text-xl font-bold text-white flex items-center gap-2"><RefreshCw className="w-5 h-5 text-[#8CE4FF]" /> {t('swap.title')}</h3>
+                                <p className="text-xs text-gray-400 mt-1">{t('swap.subtitle')}</p>
                             </div>
                             <button onClick={() => setSwapState({ isOpen: false, trackIndex: null, options: [], loading: false })} className="p-2 text-gray-400 hover:text-white bg-white/5 rounded-full"><X className="w-5 h-5" /></button>
                         </div>
@@ -26,7 +28,7 @@ const SwapModal = () => {
                         {swapState.loading ? (
                             <div className="flex flex-col items-center justify-center py-10 space-y-4">
                                 <div className="w-8 h-8 border-4 border-[#8CE4FF] border-t-transparent rounded-full animate-spin"></div>
-                                <p className="text-sm text-gray-400">Đang tính toán Vector tìm bài phù hợp...</p>
+                                <p className="text-sm text-gray-400">{t('swap.calculating')}</p>
                             </div>
                         ) : (
                             <div className="space-y-3">
@@ -42,7 +44,7 @@ const SwapModal = () => {
                                                 </p>
                                             )}
                                         </div>
-                                        <button className="px-4 py-2 bg-[#8CE4FF]/20 text-[#8CE4FF] text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">Đổi bài này</button>
+                                        <button className="px-4 py-2 bg-[#8CE4FF]/20 text-[#8CE4FF] text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">{t('swap.swapThis')}</button>
                                     </div>
                                 ))}
                             </div>

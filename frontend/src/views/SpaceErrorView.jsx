@@ -5,24 +5,26 @@ import { Home, RefreshCw } from 'lucide-react';
 import Mascot from '../components/Mascot';
 import ParticlesBackground from '../components/reactbits/ParticlesBackground';
 import TargetCursor from '../components/reactbits/TargetCursor';
+import { useTranslation } from 'react-i18next';
 
 const SpaceErrorView = ({ type = "404", onAction }) => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
 
     const errorConfig = {
         "404": {
             code: "404",
-            title: "LẠC TRONG VŨ TRỤ",
-            message: "Tọa độ không gian này không tồn tại. Có vẻ như bạn đã đi quá xa khỏi quỹ đạo MindMelody.",
-            actionText: "Về trang chủ",
+            title: t('spaceError.404.title'),
+            message: t('spaceError.404.message'),
+            actionText: t('spaceError.404.action'),
             Icon: Home,
             defaultAction: () => navigate('/')
         },
         "500": {
             code: "500",
-            title: "MẤT TÍN HIỆU",
-            message: "Trạm điều khiển (server) đang từ chối kết nối hoặc đường truyền bị nhiễu. Hãy thử lại sau!",
-            actionText: "Thử lại",
+            title: t('spaceError.500.title'),
+            message: t('spaceError.500.message'),
+            actionText: t('spaceError.500.action'),
             Icon: RefreshCw,
             defaultAction: () => window.location.reload()
         }

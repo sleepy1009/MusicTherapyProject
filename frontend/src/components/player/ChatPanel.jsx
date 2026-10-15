@@ -4,21 +4,29 @@ import { usePlayer } from './PlayerContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '../ToastContext';
 import { useConfirm } from '../ConfirmContext';
+import { useTranslation } from 'react-i18next';
+
+// value is what the backend stores (mood_before / mood_after); key picks the translated label
+const moodOptions = [
+    { value: 1, key: 'normal' },
+    { value: 2, key: 'mild' },
+    { value: 3, key: 'moderate' },
+    { value: 4, key: 'severe' },
+    { value: 5, key: 'verySevere' }
+];
+// English labels are sent to the AI so the hidden prompts stay language-neutral
+const MOOD_LABELS_EN = { normal: 'Normal', mild: 'Mild', moderate: 'Moderate', severe: 'Severe', verySevere: 'Very severe' };
+// Titles a new chat session gets by default (the DB default is Vietnamese)
+const DEFAULT_SESSION_TITLES = ['', 'Cuộc trò chuyện mới', 'New conversation'];
 
 const ChatPanel = () => {
+    const { t, i18n } = useTranslation();
     const { 
         API, playerTarget, triggerEmergencySOS, fetchDiary, currentSong,
         showPreMood, setShowPreMood, showPostMood, setShowPostMood,
         sessionId, unreadCount, setUnreadCount
     } = usePlayer();
 
-    const moodOptions = [
-        { value: 1, label: 'Bình thường' },
-        { value: 2, label: 'Nhẹ' },
-        { value: 3, label: 'Vừa' },
-        { value: 4, label: 'Nặng' },
-        { value: 5, label: 'Rất nặng' }
-    ];
     
     const [sessions, setSessions] = useState([]);
     const [currentSessionId, setCurrentSessionId] = useState(null);
@@ -51,12 +59,12 @@ const ChatPanel = () => {
                 setSessions(data);
                 if (data.length > 0 && !currentSessionId) setCurrentSessionId(data[0].id);
             }
-        } catch (err) { console.error("Lỗi lấy danh sách session:", err); }
+        } catch (err) { console.error("Failed to fetch sessions:", err); }
     };
 
     const fetchMessages = async (sessionId) => {
         if (!sessionId) {
-            setMessages([{ id: 'welcome', sender: 'BOT', content: 'Chào bạn, tôi là MindMelody. Hôm nay bạn cảm thấy thế nào?' }]);
+            setMessages([{ id: 'welcome', sender: 'BOT', textKey: 'chat.welcomeNoSession' }]);
             return;
         }
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -67,10 +75,10 @@ const ChatPanel = () => {
             if (res.ok) {
                 const data = await res.json();
                 setMessages(data.length > 0 ? data : [{ 
-                    id: 'welcome', sender: 'BOT', content: 'Chào bạn, tôi là MindMelody. Hôm nay bạn cảm thấy thế nào? Tôi luôn ở đây để lắng nghe.' 
+                    id: 'welcome', sender: 'BOT', textKey: 'chat.welcomeEmptySession' 
                 }]);
             }
-        } catch (err) { console.error("Lỗi lấy tin nhắn:", err); }
+        } catch (err) { console.error("Failed to fetch messages:", err); }
     };
 
     useEffect(() => { fetchSessions(); }, []);
@@ -89,7 +97,7 @@ const ChatPanel = () => {
             if (!hasPreMsg) {
                 setMessages(prev => [...prev, {
                     id: 'sys-pre-mood', sender: 'BOT',
-                    content: 'Giai điệu trị liệu đã bắt đầu. Hãy đánh giá mức độ căng thẳng hiện tại của bạn để tôi theo dõi nhé.',
+                    textKey: 'chat.preMoodPrompt',
                     isSystemPrompt: true, moodType: 'before'
                 }]);
             }
@@ -103,19 +111,19 @@ const ChatPanel = () => {
             if (!hasPostMsg) {
                 setMessages(prev => [...prev, {
                     id: 'sys-post-mood', sender: 'BOT',
-                    content: 'Giai điệu trị liệu đã khép lại. Hãy nhắm mắt hít thở sâu, và cho tôi biết mức độ căng thẳng của bạn lúc này.',
+                    textKey: 'chat.postMoodPrompt',
                     isSystemPrompt: true, moodType: 'after'
                 }]);
             }
         }
     }, [showPostMood, messages.length]);
 
-    const handleMoodSubmit = async (moodValue, moodLabel, type) => {
+    const handleMoodSubmit = async (moodValue, moodKey, type) => {
         setMessages(prev => prev.filter(m => !m.isSystemPrompt));
         if (type === 'before') setShowPreMood(false);
         if (type === 'after') setShowPostMood(false);
 
-        setMessages(prev => [...prev, { id: Date.now(), sender: 'USER', content: `Cảm xúc hiện tại: ${moodLabel}` }]);
+        setMessages(prev => [...prev, { id: Date.now(), sender: 'USER', textKey: 'chat.currentMood', moodKey }]);
         setIsLoading(true);
 
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -130,11 +138,12 @@ const ChatPanel = () => {
                 });
             }
 
-            const hiddenPrompt = type === 'before' 
-                ? `[HỆ THỐNG]: User vừa báo cáo trạng thái đầu phiên là "${moodLabel}". Hãy nhắn 1 câu ngắn gọn động viên họ tận hưởng âm nhạc.`
-                : `[HỆ THỐNG]: User báo cáo trạng thái cuối phiên là "${moodLabel}". Hãy động viên ngắn gọn và kết thúc phiên.`;
+            const moodLabelEn = MOOD_LABELS_EN[moodKey];
+            const hiddenPrompt = type === 'before'
+                ? `The user just reported their stress level at the start of the session as "${moodLabelEn}". Send ONE short sentence encouraging them to enjoy the music.`
+                : `The user reported their stress level at the end of the session as "${moodLabelEn}". Give brief encouragement and wrap up the session.`;
             
-            const songContext = currentSong?.title ? `${currentSong.title} - ${currentSong.artist}` : 'Đang không nghe nhạc';
+            const songContext = currentSong?.title ? `${currentSong.title} - ${currentSong.artist}` : '';
 
             const res = await fetch(`${API}/users/chat/`, {
                 method: 'POST',
@@ -143,6 +152,7 @@ const ChatPanel = () => {
                     content: hiddenPrompt, 
                     session_id: currentSessionId, 
                     is_system_event: true,
+                    lang: i18n.language,
                     current_song: songContext,
                     current_track_id: currentSong?.id
                 })
@@ -167,19 +177,19 @@ const ChatPanel = () => {
                 const newSess = await res.json();
                 setSessions([newSess, ...sessions]);
                 setCurrentSessionId(newSess.id);
-                setMessages([{ id: 'welcome', sender: 'BOT', content: 'Phiên chat mới đã bắt đầu. Hãy chia sẻ bất cứ điều gì bạn đang suy nghĩ.' }]);
+                setMessages([{ id: 'welcome', sender: 'BOT', textKey: 'chat.newSessionStarted' }]);
             }
-        } catch (err) { console.error("Lỗi tạo session:", err); }
+        } catch (err) { console.error("Failed to create session:", err); }
     };
 
     const handleDeleteSession = async (e, id) => {
         e.stopPropagation();
         
         const isConfirmed = await confirm({
-            title: "Xóa đoạn chat này?",
-            message: "Đoạn chat này sẽ bị xóa vĩnh viễn khỏi nhật ký và không thể khôi phục.",
-            confirmText: "Xóa luôn",
-            cancelText: "Giữ lại",
+            title: t('chat.deleteConfirm.title'),
+            message: t('chat.deleteConfirm.message'),
+            confirmText: t('chat.deleteConfirm.confirm'),
+            cancelText: t('chat.deleteConfirm.cancel'),
             type: "danger" 
         });
 
@@ -194,14 +204,14 @@ const ChatPanel = () => {
             if (res.ok) {
                 const newSessions = sessions.filter(s => s.id !== id);
                 setSessions(newSessions);
-                toast.success("Đã xóa đoạn chat.");
+                toast.success(t('chat.toast.deleted'));
                 if (currentSessionId === id) {
                     setCurrentSessionId(newSessions.length > 0 ? newSessions[0].id : null);
                 }
             }
         } catch (err) { 
-            console.error("Lỗi xóa session:", err); 
-            toast.error("Lỗi kết nối, không thể xóa.");
+            console.error("Failed to delete session:", err); 
+            toast.error(t('chat.toast.deleteFailed'));
         }
     };
 
@@ -214,13 +224,14 @@ const ChatPanel = () => {
 
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         try {
-            const songContext = currentSong?.title ? `${currentSong.title} - ${currentSong.artist}` : 'Đang không nghe nhạc';
+            const songContext = currentSong?.title ? `${currentSong.title} - ${currentSong.artist}` : '';
 
             const res = await fetch(`${API}/users/chat/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ 
-                    content: userMsg, 
+                    content: userMsg,
+                    lang: i18n.language, 
                     session_id: currentSessionId,
                     current_song: songContext,
                     current_track_id: currentSong?.id
@@ -243,8 +254,8 @@ const ChatPanel = () => {
                 }
             }
         } catch (err) {
-            setMessages(prev => [...prev, { sender: 'BOT', content: 'Kết nối đang gặp sự cố, bạn thông cảm nhé.' }]);
-            toast.error("Kết nối AI đang gặp sự cố.");
+            setMessages(prev => [...prev, { sender: 'BOT', textKey: 'chat.connectionError' }]);
+            toast.error(t('chat.toast.aiConnection'));
         } finally { setIsLoading(false); }
     };
 
@@ -259,7 +270,7 @@ const ChatPanel = () => {
         if (type === 'panic') {
             setMessages(prev => [...prev, {
                 id: Date.now(), sender: 'BOT',
-                content: "Tôi nhận thấy bạn đang lo lắng. Hãy nhắm mắt lại và cùng thực hiện kỹ thuật thở 4-7-8. Nhạc đã được tự động điều chỉnh để làm dịu nhịp tim của bạn."
+                textKey: 'chat.panicReply'
             }]);
             triggerEmergencySOS(); 
         }
@@ -278,24 +289,31 @@ const ChatPanel = () => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}` 
                 },
-                body: JSON.stringify({ session_id: currentSessionId })
+                body: JSON.stringify({ session_id: currentSessionId, lang: i18n.language })
             });
 
             if (res.ok) {
                 setJustSummarized(true);
-                toast.success("Đã đúc kết và lưu vào sổ nhật ký.");
+                toast.success(t('chat.toast.summarySaved'));
                 setTimeout(() => setJustSummarized(false), 3000); 
                 
                 fetchDiary(); 
             } else {
                 const err = await res.json();
-                toast.error(err.error || "Không thể tóm tắt đoạn chat này.");
+                toast.error(t(`errors.${err.code}`, { defaultValue: err.error || t('chat.toast.summaryFailed') }));
             }
         } catch (error) {
-            console.error("Lỗi tóm tắt:", error);
+            console.error("Summarize error:", error);
         } finally {
             setIsSummarizing(false);
         }
+    };
+
+    // Client-made messages carry a textKey so they re-translate when the language changes.
+    // Server messages (AI replies, history) keep their stored content.
+    const renderContent = (msg) => {
+        if (!msg.textKey) return msg.content;
+        return t(msg.textKey, msg.moodKey ? { mood: t(`chat.mood.${msg.moodKey}`) } : undefined);
     };
 
     return (
@@ -312,7 +330,7 @@ const ChatPanel = () => {
                             <button 
                                 onClick={() => setIsSidebarOpen(false)} 
                                 className="p-2 text-main_text/90 hover:text-main_text bg-[#41A67E] hover:scale-110 rounded-xl transition-colors"
-                                title="Đóng danh sách"
+                                title={t('chat.closeList')}
                             >
                                 <PanelLeftClose size={14} />
                             </button>
@@ -320,7 +338,7 @@ const ChatPanel = () => {
                                 onClick={handleCreateSession}
                                 className="px-4 py-2 ml-6 bg-white/5 hover:bg-white/10 hover:text-[#66D0BC] hover:scale-105 border border-main_text/30 rounded-xl text-main_text/60 text-[11px] font-medium flex items-center justify-center gap-2 transition-all"
                             >
-                                <Plus size={14} /> Phiên mới
+                                <Plus size={14} /> {t('chat.newSession')}
                             </button>
                         </div>
                         <div className="flex-1 overflow-y-auto py-2 custom-scrollbar">
@@ -332,13 +350,13 @@ const ChatPanel = () => {
                                     <div className="flex items-center gap-3 overflow-hidden flex-1">
                                         <MessageSquare size={14} className={currentSessionId === s.id ? 'text-[#66D0BC]' : 'text-gray-500'} />
                                         <span className={`text-[12px] truncate ${currentSessionId === s.id ? 'text-white' : 'text-gray-400'}`}>
-                                            {s.title}
+                                            {DEFAULT_SESSION_TITLES.includes(s.title) ? t('chat.newSessionTitle') : s.title}
                                         </span>
                                     </div>
                                     <button 
                                         onClick={(e) => handleDeleteSession(e, s.id)}
                                         className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 p-1 transition-all"
-                                        title="Xóa phiên này"
+                                        title={t('chat.deleteSession')}
                                     >
                                         <Trash2 size={14} />
                                     </button>
@@ -356,7 +374,7 @@ const ChatPanel = () => {
                             <button 
                                 onClick={() => setIsSidebarOpen(true)} 
                                 className="p-2 text-main_text/90 hover:text-main_text bg-[#41A67E] hover:scale-110 rounded-lg transition-colors"
-                                title="Mở danh sách đoạn chat"
+                                title={t('chat.openList')}
                             >
                                 <PanelLeftOpen size={14} />
                                 {unreadCount > 0 && (
@@ -370,7 +388,7 @@ const ChatPanel = () => {
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 rounded-full bg-[#66D0BC] animate-pulse shadow-[0_0_8px_#66D0BC]" />
-                                <span className="text-sm font-bold font-out-text text-main_text/90 hidden sm:block">Trợ lý MindMelody</span>
+                                <span className="text-sm font-bold font-out-text text-main_text/90 hidden sm:block">{t('chat.assistantTitle')}</span>
                             </div>
 
                             <motion.button
@@ -378,7 +396,7 @@ const ChatPanel = () => {
                                 whileTap={{ scale: 0.95 }}
                                 onClick={handleManualSummary}
                                 disabled={isSummarizing || !currentSessionId}
-                                title="AI sẽ đọc đoạn chat này và viết thành 1 bài Nhật ký"
+                                title={t('chat.summarizeTooltip')}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
                                     justSummarized 
                                     ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
@@ -392,7 +410,7 @@ const ChatPanel = () => {
                                 ) : (
                                     <Book size={14} />
                                 )}
-                                {isSummarizing ? 'Đang ghi chép...' : justSummarized ? 'Đã lưu nhật ký' : 'Tóm tắt & Lưu'}
+                                {isSummarizing ? t('chat.summarizing') : justSummarized ? t('chat.summarized') : t('chat.summarize')}
                             </motion.button>
                         </div>
                     </div>
@@ -401,7 +419,7 @@ const ChatPanel = () => {
                         onClick={() => handleEmergency('panic')} 
                         className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-300 text-[10px] sm:text-[11px] font-medium hover:bg-rose-500/20 transition-all shadow-sm"
                     >
-                        <AlertCircle size={16} /> <span className="hidden sm:inline">Trợ giúp</span>
+                        <AlertCircle size={16} /> <span className="hidden sm:inline">{t('chat.help')}</span>
                     </button>
                 </div>
 
@@ -417,22 +435,22 @@ const ChatPanel = () => {
                             <div className={`max-w-[85%] md:max-w-[75%] px-4 py-3 rounded-2xl text-[13px] md:text-sm leading-relaxed shadow-lg  ${
                                 msg.sender === 'USER' ? 'bg-[#41A67E]/80 text-white rounded-tr-none' : 'bg-white/10 text-gray-200 border border-white/5 rounded-tl-none backdrop-blur-sm'
                             }`}>
-                                {msg.content}
+                                {renderContent(msg)}
                                 {msg.isSystemPrompt && (
                                     <div className="mt-4 flex flex-col gap-2 w-full border-t border-white/10 pt-4">
                                         <div className="flex justify-center gap-2 w-full">
                                             {moodOptions.slice(0, 2).map(opt => (
-                                                <button key={opt.value} onClick={() => handleMoodSubmit(opt.value, opt.label, msg.moodType)}
+                                                <button key={opt.value} onClick={() => handleMoodSubmit(opt.value, opt.key, msg.moodType)}
                                                     className="flex-1 py-2 px-1 bg-white/5 hover:bg-[#41A67E] border border-white/20 hover:border-[#41A67E] rounded-xl text-[11px] font-medium text-white transition-all text-center">
-                                                    {opt.label}
+                                                    {t(`chat.mood.${opt.key}`)}
                                                 </button>
                                             ))}
                                         </div>
                                         <div className="flex justify-center gap-2 w-full">
                                             {moodOptions.slice(2, 5).map(opt => (
-                                                <button key={opt.value} onClick={() => handleMoodSubmit(opt.value, opt.label, msg.moodType)}
+                                                <button key={opt.value} onClick={() => handleMoodSubmit(opt.value, opt.key, msg.moodType)}
                                                     className="flex-1 py-2 px-1 bg-white/5 hover:bg-[#41A67E] border border-white/20 hover:border-[#41A67E] rounded-xl text-[11px] font-medium text-white transition-all text-center">
-                                                    {opt.label}
+                                                    {t(`chat.mood.${opt.key}`)}
                                                 </button>
                                             ))}
                                         </div>
@@ -446,7 +464,7 @@ const ChatPanel = () => {
                             <img src="/mascot/robot-run.gif" className="w-9 h-9 rounded-full border-2 border-[#9ED3DC]/50 bg-black/40" alt="bot" />
                             <div className="px-4 py-3 bg-white/5 border border-white/5 rounded-2xl rounded-tl-none flex items-center gap-2">
                                 <Loader2 size={14} className="animate-spin text-[#9ED3DC]" />
-                                <span className="text-xs text-gray-400 font-out-text">MindMelody đang lắng nghe...</span>
+                                <span className="text-xs text-gray-400 font-out-text">{t('chat.listening')}</span>
                             </div>
                         </div>
                     )}
@@ -456,7 +474,7 @@ const ChatPanel = () => {
                     <div className="relative flex items-end gap-2">
                         <textarea
                             value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown}
-                            placeholder="Chia sẻ với tôi nhé (Shift + Enter để xuống dòng)..."
+                            placeholder={t('chat.placeholder')}
                             className="flex-1 bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-[13px] text-white placeholder-gray-500 focus:outline-none focus:border-[#41A67E]/50 transition-all resize-none custom-scrollbar"
                             rows="1" style={{ minHeight: '46px', maxHeight: '120px' }}
                         />
@@ -470,7 +488,7 @@ const ChatPanel = () => {
 
                     <div className={`overflow-hidden transition-all duration-300 ease-in-out flex justify-center ${input.trim() ? 'max-h-0 opacity-0 mt-0' : 'max-h-10 opacity-60 mt-2'}`}>
                         <p className="text-[10px] text-center text-gray-400 font-medium tracking-wide flex items-center gap-1">
-                            <AlertCircle size={10} /> Tôi là AI hỗ trợ cảm xúc, không thay thế chuyên gia y tế.
+                            <AlertCircle size={10} /> {t('chat.disclaimer')}
                         </p>
                     </div>
                 </div>

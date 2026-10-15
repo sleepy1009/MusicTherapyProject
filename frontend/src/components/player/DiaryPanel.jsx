@@ -5,13 +5,15 @@ import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { usePlayer } from './PlayerContext';
 import { useToast } from '../ToastContext';
+import { useTranslation } from 'react-i18next';
+import { formatDate } from '../../utils/formatDate';
 
 
 const DIARY_THEMES = [
-  { id: 'theme-default', name: 'Mặc định', image: '/images/p0.png' },
-  { id: 'theme-forest', name: 'Rừng xanh', image: '/images/p1.jpg' },
-  { id: 'theme-sunset', name: 'Hoàng hôn', image: '/images/p2.jpg' },
-  { id: 'theme-rain', name: 'Mưa rơi', image: '/images/p3.png' },
+  { id: 'theme-default', nameKey: 'diary.themes.default', image: '/images/p0.png' },
+  { id: 'theme-forest', nameKey: 'diary.themes.forest', image: '/images/p1.jpg' },
+  { id: 'theme-sunset', nameKey: 'diary.themes.sunset', image: '/images/p2.jpg' },
+  { id: 'theme-rain', nameKey: 'diary.themes.rain', image: '/images/p3.png' },
 ];
 
 const modules = {
@@ -26,10 +28,11 @@ const DiaryPanel = () => {
   } = usePlayer();
 
   const toast = useToast();
+  const { t, i18n } = useTranslation();
   
 
   const getThemeImage = (themeId) => {
-    const theme = DIARY_THEMES.find(t => t.id === themeId);
+    const theme = DIARY_THEMES.find(th => th.id === themeId);
     return theme ? theme.image : DIARY_THEMES[0].image;
   };
 
@@ -39,7 +42,7 @@ const DiaryPanel = () => {
   };
 
   const handleSave = async () => {
-    if (!currentDiaryEntry.title.trim()) return toast.warning("Bạn chưa đặt tiêu đề cho nhật ký kìa.");
+    if (!currentDiaryEntry.title.trim()) return toast.warning(t('diary.titleRequired'));
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const isNew = currentDiaryEntry.id === null;
     const url = isNew ? `${API}/users/diary/` : `${API}/users/diary/${currentDiaryEntry.id}/`;
@@ -52,7 +55,7 @@ const DiaryPanel = () => {
       });
       if (res.ok) {
         fetchDiary();
-        toast.success("Đã lưu nhật ký thành công.");
+        toast.success(t('diary.saved'));
         setDiaryViewMode('list');
       }
     } catch (err) { console.error(err); }
@@ -67,7 +70,7 @@ const DiaryPanel = () => {
               <div className="flex bg-white/5 p-1 rounded-lg border border-white/10">
                 {['all', 'week', 'month'].map(f => (
                   <button key={f} onClick={() => setDiaryFilter(f)} className={`px-3 py-1 text-[10px] rounded-md transition-all ${diaryFilter === f ? 'bg-[#41A67E] text-white' : 'text-gray-400'}`}>
-                    {f === 'all' ? 'Tất cả' : f === 'week' ? 'Tuần' : 'Tháng'}
+                    {t(`diary.filter.${f}`)}
                   </button>
                 ))}
               </div>
@@ -83,7 +86,7 @@ const DiaryPanel = () => {
                   <img src={getThemeImage(entry.theme)} className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-110 transition-transform duration-700" />
                   <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent p-3 flex flex-col justify-center">
                     <h4 className="text-sm font-bold text-white truncate mb-1">{entry.title}</h4>
-                    <p className="text-[10px] text-gray-400 flex items-center gap-1"><Calendar size={10}/> {new Date(entry.created_at).toLocaleDateString('vi-VN')}</p>
+                    <p className="text-[10px] text-gray-400 flex items-center gap-1"><Calendar size={10}/> {formatDate(entry.created_at, i18n.language)}</p>
                   </div>
                 </div>
               ))}
@@ -96,10 +99,10 @@ const DiaryPanel = () => {
               <div className="p-3 border-b border-white/10 bg-black/40 flex items-center justify-between">
                 <button onClick={() => setDiaryViewMode('list')} className="p-1 text-gray-400 hover:text-white"><ArrowLeft size={18}/></button>
                 <div className="flex gap-1">
-                  {DIARY_THEMES.map(t => (
-                    <button key={t.id} onClick={() => setCurrentDiaryEntry({...currentDiaryEntry, theme: t.id})} 
-                      className={`w-5 h-5 rounded-full border transition-all ${currentDiaryEntry.theme === t.id ? 'border-[#66D0BC] scale-110' : 'border-transparent opacity-50'}`}>
-                      <img src={t.image} className="w-full h-full rounded-full object-cover" />
+                  {DIARY_THEMES.map(theme => (
+                    <button key={theme.id} title={t(theme.nameKey)} onClick={() => setCurrentDiaryEntry({...currentDiaryEntry, theme: theme.id})} 
+                      className={`w-5 h-5 rounded-full border transition-all ${currentDiaryEntry.theme === theme.id ? 'border-[#66D0BC] scale-110' : 'border-transparent opacity-50'}`}>
+                      <img src={theme.image} className="w-full h-full rounded-full object-cover" />
                     </button>
                   ))}
                 </div>
@@ -107,7 +110,7 @@ const DiaryPanel = () => {
               </div>
               <div className="p-4 flex-1 flex flex-col overflow-hidden">
                 <input type="text" value={currentDiaryEntry.title} onChange={e => setCurrentDiaryEntry({...currentDiaryEntry, title: e.target.value})}
-                  placeholder="Tiêu đề..." className="w-full bg-transparent border-none text-lg font-bold text-white focus:outline-none mb-2" />
+                  placeholder={t('diary.titlePlaceholder')} className="w-full bg-transparent border-none text-lg font-bold text-white focus:outline-none mb-2" />
                 <div className="flex-1 overflow-y-auto custom-quill-sidebar">
                   <ReactQuill theme="snow" value={currentDiaryEntry.content} onChange={val => setCurrentDiaryEntry({...currentDiaryEntry, content: val})} modules={modules} />
                 </div>

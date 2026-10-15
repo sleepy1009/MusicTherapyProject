@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 const NUM_BLOCKS = [2,3];
 const FRAGMENTS = 13;
@@ -25,6 +26,7 @@ function genBlock() {
 }
 
 export default function EasterEggs() {
+  const { t } = useTranslation();
   const [targetCount] = useState(() => NUM_BLOCKS[randomInt(0, NUM_BLOCKS.length-1)]);
   const [blocks, setBlocks] = useState(() => Array.from({ length: targetCount }, genBlock));
   const [debris, setDebris] = useState([]);
@@ -173,7 +175,7 @@ export default function EasterEggs() {
               e.currentTarget.style.pointerEvents = "none";
               handleBroken(block, e);
             }}
-            title="Shoot me!"
+            title={t('hero.shootMe')}
           />
         ))}
       </AnimatePresence>

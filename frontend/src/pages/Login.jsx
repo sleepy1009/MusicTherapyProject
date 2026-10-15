@@ -6,12 +6,14 @@ import ParticlesBackground from '../components/reactbits/ParticlesBackground';
 import { useToast } from '../components/ToastContext';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useDocumentTitle } from '../utils/useDocumentTitle';
+import { useTranslation } from 'react-i18next';
 
 
 const Login = () => {
+  const { t } = useTranslation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(''); 
+  const [error, setError] = useState(null); // { key, params } = translated message, { raw } = server text 
   const [successMessage, setSuccessMessage] = useState('');
   const [loginAttempts, setLoginAttempts] = useState(0); 
   const [isBlocked, setIsBlocked] = useState(false); 
@@ -19,7 +21,7 @@ const Login = () => {
 
   const toast = useToast();
   
-  useDocumentTitle('Đăng nhập');
+  useDocumentTitle(t('auth.loginTitle'));
 
   
   const [rememberMe, setRememberMe] = useState(true);
@@ -63,26 +65,25 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault(); 
-    setError(''); 
+    setError(null);
     setSuccessMessage(''); 
 
     if (isBlocked) {
-      setError('Đăng nhập thất bại quá nhiều, thử lại sau...');
+      setError({ key: 'auth.errors.tooManyFailed' });
       return;
     }
     if (!username || !password) {
-      setError('Tên đăng nhập và mật khẩu không được để trống!');
+      setError({ key: 'auth.errors.emptyCredentials' });
       return;
     }
 
-    if (username.length < 3 || username.length > 20) {
-      if(username.includes('@')) 
-      setError('Tên người dùng phải có từ 3 đến 20 ký tự.');
+    if (!username.includes('@') && (username.length < 3 || username.length > 20)) {
+      setError({ key: 'auth.errors.usernameLength' });
       return;
     }
 
     if (password.length < 8 || password.length > 32) {
-      setError('Mật khẩu phải có từ 8 đến 32 ký tự.');
+      setError({ key: 'auth.errors.passwordLength' });
       return;
     }
 
@@ -98,7 +99,7 @@ const Login = () => {
         const storage = rememberMe ? localStorage : sessionStorage;
         storage.setItem('token', data.access); 
         storage.setItem('username', username);
-        toast.success("Đăng nhập thành công!");
+        toast.success(t('auth.toast.loginSuccess'));
 
 
         const profileRes = await fetch(`${API}/users/me/`, {
@@ -120,9 +121,9 @@ const Login = () => {
         }
       } else {
         if (data.message === 'Invalid credentials' || data.detail) {
-          setError('Sai thông tin đăng nhập hoặc mật khẩu!'); 
+          setError({ key: 'auth.errors.invalidCredentials' }); 
         } else {
-          setError(data.message || 'Login failed');
+          setError(data.message ? { raw: data.message } : { key: 'auth.errors.loginFailed' });
         }
         
         const newAttempts = loginAttempts + 1;
@@ -132,11 +133,11 @@ const Login = () => {
             setIsBlocked(true);
             const blockUntil = new Date().getTime() + (2 * 60 * 60 * 1000); 
             localStorage.setItem('blockedUntil', blockUntil.toString());
-            setError('Thử quá nhiều lần. Vui lòng quay lại sau.');
+            setError({ key: 'auth.errors.tooManyAttempts' });
         }
       }
     } catch (err) {
-      setError('Đã xảy ra lỗi kết nối đến máy chủ!');
+      setError({ key: 'auth.errors.connection' });
       console.error(err);
     }
   };
@@ -170,16 +171,16 @@ const Login = () => {
                 localStorage.setItem('displayName', profileData.display_name || profileData.username);
                 if (profileData.avatar) localStorage.setItem('avatar', profileData.avatar);
                 navigate('/');
-                toast.success("Đăng nhập bằng Google thành công!");
+                toast.success(t('auth.toast.googleLoginSuccess'));
             }
         } else {
-             setError('Lỗi xác thực từ Server.');
+             setError({ key: 'auth.errors.serverAuth' });
         }
       } catch (err) {
-        setError('Lỗi kết nối máy chủ.');
+        setError({ key: 'auth.errors.serverConnection' });
       }
     },
-    onError: () => setError('Đăng nhập Google bị hủy.')
+    onError: () => setError({ key: 'auth.errors.googleCancelled' })
   });
 
   return (
@@ -207,25 +208,25 @@ const Login = () => {
             animate={{ backgroundPosition: ["0% center", "200% center"] }}
             transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
         >
-            Đăng Nhập
+            {t('auth.loginHeading')}
         </motion.h2>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-gray-400 uppercase tracking-widest mb-2 mt-4">Tên đăng nhập</label>
+            <label className="block text-xs font-medium text-gray-400 uppercase tracking-widest mb-2 mt-4">{t('auth.username')}</label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
               <input 
                 type="text" value={username} onChange={(e) => setUsername(e.target.value)}
                 className="w-full bg-main_text/90 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-black placeholder-gray-600 focus:outline-primary focus:border-primary transition-colors"
-                placeholder="Nhập tên đăng nhập hoặc email"
+                placeholder={t('auth.usernameOrEmailPlaceholder')}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-400 uppercase tracking-widest mb-2">Mật khẩu</label>
+            <label className="block text-xs font-medium text-gray-400 uppercase tracking-widest mb-2">{t('auth.password')}</label>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
               <input 
@@ -252,9 +253,9 @@ const Login = () => {
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="w-4 h-4 rounded border-gray-400 text-[#41A67E] focus:ring-[#41A67E] bg-white/50 cursor-pointer"
               />
-              <span className="text-sm text-gray-300 group-hover:text-white transition-colors">Ghi nhớ đăng nhập</span>
+              <span className="text-sm text-gray-300 group-hover:text-white transition-colors">{t('auth.rememberMe')}</span>
             </label>
-            <a href="#" className="text-sm text-[#41A67E] hover:text-[#66D0BC] transition-colors font-medium">Quên mật khẩu?</a>
+            <a href="#" className="text-sm text-[#41A67E] hover:text-[#66D0BC] transition-colors font-medium">{t('auth.forgotPassword')}</a>
           </div>
 
           <AnimatePresence>
@@ -268,7 +269,7 @@ const Login = () => {
               >
                 <div className="p-3 mt-2 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center gap-3 text-red-400 text-sm">
                   <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                  <p>{error}</p>
+                  <p>{error.raw ?? t(error.key, error.params)}</p>
                 </div>
               </motion.div>
             )}
@@ -280,7 +281,7 @@ const Login = () => {
             >
             <span className="relative font-out-text z-20 flex items-center gap-2 transition-transform duration-500 group-hover:translate-x-3">
                 <LogIn className="w-4 h-4 transition-all duration-500 group-hover:opacity-0 group-hover:translate-y-5 group-hover:rotate-45" /> 
-                Đăng nhập
+                {t('auth.loginButton')}
             </span>
 
             <div className="absolute top-1/2 left-[calc(50%-75px)] -translate-y-1/2 z-10 pointer-events-none">
@@ -307,7 +308,7 @@ const Login = () => {
 
         <div className="mt-6 flex items-center gap-4">
           <div className="h-px bg-white/10 flex-1"></div>
-          <span className="text-xs text-gray-500 uppercase tracking-widest">Hoặc</span>
+          <span className="text-xs text-gray-500 uppercase tracking-widest">{t('auth.or')}</span>
           <div className="h-px bg-white/10 flex-1"></div>
         </div>
 
@@ -317,13 +318,13 @@ const Login = () => {
           className="w-2/4 mx-auto mt-4 py-2 bg-transparent hover:bg-gray-100/20 text-main_text text-sm font-semibold rounded-full transition-colors flex items-center justify-center gap-2 cursor-pointer"
         >
           <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-4 h-4" />
-          Đăng nhập với Google
+          {t('auth.loginWithGoogle')}
         </button>
 
         <p className="mt-4 text-center text-sm text-gray-400">
-          Chưa có tài khoản?{' '}
+          {t('auth.noAccount')}{' '}
           <Link to="/register" className="text-[#41A67E] hover:text-[#66D0BC]/80 font-bold transition-colors">
-            Đăng ký ngay
+            {t('auth.registerNow')}
           </Link>
         </p>
       </motion.div>

@@ -45,5 +45,528 @@
         "href": "tel:+84963061414"
       }
     ]
+  },
+  "common": {
+    "back": "Back"
+  },
+  "intro": {
+    "lines": [
+      "Hi, I'm your AI wellbeing assistant.",
+      "I'll ask you 21 short questions.",
+      "Please answer honestly..."
+    ],
+    "start": "Start answering"
+  },
+  "errors": {
+    "google_token_missing": "Missing Google token.",
+    "google_token_invalid": "Invalid or expired Google token.",
+    "google_email_missing": "Couldn't get your email from Google.",
+    "server_error": "Something went wrong on our side. Please try again.",
+    "dass_required": "You need to take the DASS-21 test first.",
+    "empty_track_list": "The track list is empty.",
+    "session_track_not_found": "That track position doesn't exist in this session.",
+    "min_liked_tracks_required": "You need at least 14 liked tracks for the AI to analyze your path.",
+    "content_required": "Message content is missing.",
+    "chat_session_not_found": "This chat session doesn't exist.",
+    "chat_too_short": "This chat is too short to summarize.",
+    "summary_failed": "The AI couldn't summarize this chat.",
+    "diary_saved": "Saved to your diary."
+  },
+  "chat": {
+    "welcomeNoSession": "Hi, I'm MindMelody. How are you feeling today?",
+    "welcomeEmptySession": "Hi, I'm MindMelody. How are you feeling today? I'm always here to listen.",
+    "newSessionStarted": "A new chat has started. Share anything that's on your mind.",
+    "preMoodPrompt": "Your therapeutic music has begun. Please rate your current stress level so I can keep track.",
+    "postMoodPrompt": "Your therapeutic music has come to a close. Close your eyes, take a deep breath, and tell me how stressed you feel right now.",
+    "currentMood": "Current stress level: {{mood}}",
+    "panicReply": "I can tell you're feeling anxious. Close your eyes and let's try the 4-7-8 breathing technique together. The music has been automatically adjusted to help calm your heart rate.",
+    "connectionError": "The connection is having trouble. Thanks for your patience.",
+    "mood": {
+      "normal": "Normal",
+      "mild": "Mild",
+      "moderate": "Moderate",
+      "severe": "Severe",
+      "verySevere": "Very severe"
+    },
+    "toast": {
+      "deleted": "Chat deleted.",
+      "deleteFailed": "Connection error, couldn't delete.",
+      "aiConnection": "The AI connection is having trouble.",
+      "summarySaved": "Summarized and saved to your diary.",
+      "summaryFailed": "Couldn't summarize this chat."
+    },
+    "deleteConfirm": {
+      "title": "Delete this chat?",
+      "message": "This chat will be permanently deleted from your diary and can't be recovered.",
+      "confirm": "Delete it",
+      "cancel": "Keep it"
+    },
+    "closeList": "Close list",
+    "openList": "Open chat list",
+    "newSession": "New chat",
+    "newSessionTitle": "New conversation",
+    "deleteSession": "Delete this chat",
+    "assistantTitle": "MindMelody Assistant",
+    "summarizeTooltip": "The AI will read this chat and write it up as a diary entry",
+    "summarizing": "Writing it down...",
+    "summarized": "Saved to diary",
+    "summarize": "Summarize & Save",
+    "help": "Help",
+    "listening": "MindMelody is listening...",
+    "placeholder": "Share with me (Shift + Enter for a new line)...",
+    "disclaimer": "I'm an AI for emotional support, not a substitute for a medical professional."
+  },
+  "dass": {
+    "levels": {
+      "normal": "Normal",
+      "mild": "Mild",
+      "moderate": "Moderate",
+      "severe": "Severe",
+      "extreme": "Extremely severe"
+    },
+    "categories": {
+      "stress": "Stress",
+      "anxiety": "Anxiety",
+      "depression": "Depression"
+    }
+  },
+  "result": {
+    "analyzingTitle": "Analyzing your emotions...",
+    "analyzingSub": "MindMelody is quantifying your scores",
+    "title": "DASS-21 Results",
+    "descSos": "We can see you're under quite a lot of pressure. Don't worry, the system has prepared a special, safe therapy space just for you.",
+    "descNormal": "Your results are ready. Save your profile so our algorithm can build the music path that suits you best.",
+    "saving": "Setting up your orbit...",
+    "enterSos": "Enter SOS Space",
+    "saveContinue": "Save & Continue",
+    "loginToActivate": "Log in to activate"
+  },
+  "checkpoint": {
+    "welcomeBack": "Welcome back",
+    "messageSevere": "I can see you're in a really difficult place right now. Please tap the SOS button in the navigation bar to get hotline numbers.",
+    "messageNormal": "Would you like to continue from last time, or start a fresh assessment today?",
+    "assessedOn": "Assessed on {{date}}",
+    "createPlaylist": "Create a playlist from these results",
+    "createPlaylistSub": "Based on your assessment from {{date}}",
+    "replayPlaylist": "Replay your latest playlist",
+    "tracks_one": "{{count}} track",
+    "tracks_other": "{{count}} tracks",
+    "takeNewTest": "Take a new test today",
+    "takeNewTestSub": "Update how you're feeling right now",
+    "safeSpace": "Enter the Safe Space",
+    "safeSpaceSub": "Listen to sounds that soothe your mind"
+  },
+  "playlistDock": {
+    "title": "Your Playlist",
+    "selecting": "Selecting...",
+    "emptyHint": "Pick a card to add it here",
+    "regenerate": "Regenerate",
+    "preparing": "Preparing...",
+    "start": "Start listening"
+  },
+  "cardSelection": {
+    "shuffle": "Shuffle tracks"
+  },
+  "focus": {
+    "loading": "Loading...",
+    "findingMusic": "AI is analyzing and finding music for you...",
+    "phases": {
+      "1": "Matching - Tuning in to how you feel right now.",
+      "2": "Matching - Relax and accept every thought.",
+      "3": "Transition - A little rhythm to ease the tension.",
+      "4": "Transition - Gently shifting your mood.",
+      "5": "Destination - Finding peace in your mind again.",
+      "6": "Destination - Soft light and hope.",
+      "7": "Destination - Welcoming a new wave of positive energy."
+    },
+    "toast": {
+      "playlistFailed": "Couldn't create the playlist! Please try again.",
+      "musicFailed": "Something went wrong while processing the music."
+    },
+    "exitConfirm": {
+      "title": "Heads up",
+      "message": "Are you sure you want to leave? Your current progress will be lost.",
+      "confirm": "Leave",
+      "cancel": "Keep going"
+    }
+  },
+  "moodOverlay": {
+    "titleBefore": "Take 10 seconds to check in with yourself",
+    "titleAfter": "Your therapy session has ended. How do you feel?",
+    "subBefore": "Close your eyes, take a deep breath and listen to your body",
+    "subAfter": "Did the music help you release tension and find your balance?",
+    "stressed": "Stressed",
+    "relaxed": "Relaxed",
+    "ariaLabel": "Rate your level of relaxation",
+    "start": "Start listening session",
+    "finish": "Complete rating",
+    "saving": "Saving your result...",
+    "feedback": {
+      "veryStressed": "Very stressed / Anxious",
+      "slightlyTired": "A bit tired / Mildly stressed",
+      "normal": "Normal",
+      "relaxed": "Relaxed",
+      "peaceful": "Completely at peace"
+    }
+  },
+  "player": {
+    "skipTip": "Quick tip: following the track order gives the best therapeutic effect. If a melody doesn't suit you, use Swap in the playlist instead of skipping!",
+    "proactiveToast": "MindMelody just sent you a message...",
+    "researchMode": "Research mode activated.",
+    "researchReport": "Research Report",
+    "playlistTitle": "Playlist",
+    "diaryTitle": "Emotion Diary"
+  },
+  "diary": {
+    "filter": {
+      "all": "All",
+      "week": "Week",
+      "month": "Month"
+    },
+    "titleRequired": "You haven't given your diary entry a title yet.",
+    "saved": "Diary saved successfully.",
+    "titlePlaceholder": "Title...",
+    "themes": {
+      "default": "Default",
+      "forest": "Green forest",
+      "sunset": "Sunset",
+      "rain": "Falling rain"
+    }
+  },
+  "swap": {
+    "title": "Choose a replacement track",
+    "subtitle": "The current track will be recorded as \"Disliked\".",
+    "calculating": "Calculating vectors to find a matching track...",
+    "swapThis": "Swap to this one"
+  },
+  "visualizer": {
+    "tips": [
+      "Try breathing in for 4 seconds, holding for 4, breathing out for 4...",
+      "Close your eyes and focus on the rhythm of the music...",
+      "All tension passes eventually. You're doing great."
+    ]
+  },
+  "media": {
+    "seekTip": "For the music to work at its best, try listening in order.",
+    "pipUnsupported": "Your browser doesn't support Picture-in-Picture, or is blocking it.",
+    "liked": "Liked!",
+    "shuffle": "Shuffle",
+    "repeatOff": "Repeat off",
+    "repeatAll": "Repeat all",
+    "repeatOne": "Repeat one",
+    "openMiniPlayer": "Open mini player"
+  },
+  "sidebar": {
+    "liked": "Liked",
+    "like": "Like",
+    "swap": "Swap"
+  },
+  "auth": {
+    "loginTitle": "Log in",
+    "registerTitle": "Sign up",
+    "loginHeading": "Log In",
+    "registerHeading": "Sign Up",
+    "username": "Username",
+    "usernameOrEmailPlaceholder": "Enter your username or email",
+    "usernamePlaceholder": "Enter a username",
+    "emailLabel": "Email",
+    "emailPlaceholder": "Enter your email",
+    "password": "Password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "loginButton": "Log in",
+    "registerButton": "Sign up",
+    "processing": "Processing...",
+    "or": "Or",
+    "loginWithGoogle": "Log in with Google",
+    "registerWithGoogle": "Sign up with Google",
+    "noAccount": "Don't have an account?",
+    "registerNow": "Sign up now",
+    "haveAccount": "Already have an account?",
+    "loginNow": "Log in now",
+    "toast": {
+      "loginSuccess": "Logged in successfully!",
+      "googleLoginSuccess": "Logged in with Google successfully!"
+    },
+    "passwordRule": {
+      "upper": "1 uppercase letter",
+      "lower": "1 lowercase letter",
+      "number": "1 number",
+      "special": "1 special character"
+    },
+    "errors": {
+      "tooManyFailed": "Too many failed login attempts, please try again later...",
+      "emptyCredentials": "Username and password cannot be empty!",
+      "usernameLength": "Username must be between 3 and 20 characters.",
+      "passwordLength": "Password must be between 8 and 32 characters.",
+      "invalidCredentials": "Incorrect username or password!",
+      "loginFailed": "Login failed.",
+      "tooManyAttempts": "Too many attempts. Please come back later.",
+      "connection": "A connection error occurred while reaching the server!",
+      "serverAuth": "Authentication error from the server.",
+      "serverConnection": "Server connection error.",
+      "googleCancelled": "Google sign-in was cancelled.",
+      "emptyFields": "All fields are required.",
+      "invalidEmail": "Please enter a valid email address.",
+      "registerFailed": "Registration failed. Please try again.",
+      "cannotConnect": "Couldn't connect to the server. Please try again later.",
+      "passwordRequirements": "Password must contain at least: {{list}}."
+    }
+  },
+  "onboarding": {
+    "step1": {
+      "title": "Let's get acquainted!",
+      "subtitle": "What should MindMelody call you?"
+    },
+    "step2": {
+      "title": "Safe Zone",
+      "subtitle": "Pick the music genres that help you relax the most."
+    },
+    "step3": {
+      "title": "Avoid Zone",
+      "subtitle": "Is there any genre that gives you a headache or makes you uncomfortable?"
+    },
+    "displayName": "Display name",
+    "displayNamePlaceholder": "e.g. Alex",
+    "age": "Your age",
+    "ageNote": "*Your age helps the AI suggest a music tempo that better fits your heart rate.",
+    "next": "Continue",
+    "finish": "Finish",
+    "toast": {
+      "ready": "Awesome! Your profile is ready."
+    },
+    "genres": {
+      "pop_group": "Pop",
+      "kpop_group": "K-Pop & J-Pop",
+      "lofi_group": "Lofi & Chill",
+      "acoustic_group": "Acoustic & Indie",
+      "rnb_group": "R&B / Soul",
+      "hiphop_group": "Hip-hop / Rap",
+      "piano_group": "Piano / Instrumental",
+      "classical_group": "Classical",
+      "edm_group": "EDM / Dance",
+      "rock_group": "Rock"
+    }
+  },
+  "hero": {
+    "line1a": "Don't let",
+    "line1b": "anxiety",
+    "line2a": "mute",
+    "line2b": "life's melody",
+    "feature1": "Screen your mental wellbeing with the <b>DASS-21</b> questionnaire",
+    "feature2": "Apply the <b>ISO</b> principle to help regulate your emotions",
+    "feature3": "Listen to <b>relaxing</b> music, keep a <b>private</b> diary and confide in the <b>Chatbot</b>",
+    "start": "Get started",
+    "learnMore": "Learn more",
+    "demoTitle": "How does MindMelody work?",
+    "demoSubtitle": "Scroll down to see each step",
+    "steps": {
+      "1": {
+        "title": "1. Psychological screening",
+        "body": "You'll chat with the AI mascot through a short DASS-21 test. The result accurately measures your current levels of Stress, Anxiety and Depression.",
+        "note": "* You'll need to log in with some basic information so the system can make the most accurate recommendations."
+      },
+      "2": {
+        "title": "2. Build your playlist",
+        "body": "The system applies the ISO principle: it starts with songs whose rhythm matches your sadness, then gradually raises the tempo and energy to lift your mood."
+      },
+      "3": {
+        "title": "3. Listen & Release",
+        "body": "Immerse yourself in a personalized music space. You can listen while writing an emotion diary and chatting with an AI chatbot designed to be your companion."
+      },
+      "4": {
+        "title": "4. Track your progress",
+        "body": "Visit your profile to follow your healing journey, from DASS-21 emotion charts to an analysis of the music genres you've listened to."
+      }
+    },
+    "shootMe": "Shoot me!"
+  },
+  "profile": {
+    "docTitle": "Profile",
+    "menu": {
+      "info": "Personal info",
+      "stats": "Stats & Charts",
+      "diary": "Emotion Diary",
+      "therapy": "Listening Corner"
+    },
+    "toast": {
+      "updated": "Profile updated.",
+      "updateFailed": "Couldn't update your profile. Please try again.",
+      "loggedOut": "You've been safely logged out.",
+      "avatarFailed": "Couldn't change your avatar.",
+      "avatarChanged": "Avatar changed successfully."
+    },
+    "chooseAvatar": "Choose an Avatar",
+    "info": {
+      "title": "Personal info",
+      "edit": "Edit",
+      "cancel": "Cancel",
+      "save": "Save changes",
+      "changeAvatar": "Change avatar",
+      "changePassword": "Change password",
+      "basicInfo": "Basic info",
+      "displayName": "Display name",
+      "age": "Age",
+      "ageYears": "{{age}} years old",
+      "linkedEmail": "Linked email (cannot be changed)",
+      "musicInfo": "Music preferences",
+      "clickToChange": "* Click to change status:",
+      "like": "Like",
+      "dislike": "Dislike",
+      "neutral": "Neutral",
+      "safeZone": "Safe zone (Favorites):",
+      "avoid": "To avoid (Triggers):",
+      "notSet": "Not set",
+      "none": "None"
+    },
+    "stats": {
+      "loading": "Loading chart data...",
+      "title": "Stats & charts",
+      "filter": {
+        "week": "Last 7 days",
+        "month": "Last 30 days",
+        "year": "Last year"
+      },
+      "emptyTitle": "No analysis data yet",
+      "emptyBody": "Take the DASS-21 test at least once so the system can start tracking your mental wellbeing.",
+      "noDataInRange": "No data in this period",
+      "dataOnDate": "Data for {{date}}",
+      "fromTo": "From {{from}} to {{to}}",
+      "averaged": "- Averaged across tests taken at the same time",
+      "dassTitle": "Mental Health Trends (DASS-21)",
+      "noTests": "No tests in this period.",
+      "therapyTime": "Therapy time",
+      "minutes": "Minutes",
+      "topGenres": "Top genres",
+      "isoTitle": "Emotional Sync Curve",
+      "isoSub": "Energy, Valence and Tempo (BPM)",
+      "sessionOption": "Date {{date}} ({{stress}} / {{anxiety}})",
+      "valence": "Valence (0-1)",
+      "energy": "Energy (0-1)",
+      "tempo": "Tempo (BPM)"
+    },
+    "diary": {
+      "title": "Emotion Diary",
+      "filter": {
+        "all": "All",
+        "week": "This week",
+        "month": "This month"
+      },
+      "new": "New entry",
+      "emptyTitle": "You don't have any diary entries yet.",
+      "emptyBody": "Start recording how you feel today.",
+      "noneInRange": "No diary entries found in this period.",
+      "deleteTitle": "Delete entry",
+      "back": "Back",
+      "background": "Background:",
+      "delete": "Delete",
+      "save": "Save",
+      "titlePlaceholder": "Diary title...",
+      "bodyPlaceholder": "How are you feeling today? Write it here...",
+      "toast": {
+        "deleted": "Diary entry deleted.",
+        "saved": "Diary saved."
+      },
+      "deleteConfirm": {
+        "title": "Delete this diary entry?",
+        "message": "This diary entry will be permanently deleted and can't be recovered. Are you sure?",
+        "confirm": "Delete it",
+        "cancel": "Keep it"
+      }
+    },
+    "therapy": {
+      "title": "Listening Corner",
+      "preparing": "Preparing your playlist...",
+      "assess": {
+        "title": "Mood assessment",
+        "body": "Your mood changes every day. Take a short test so the AI can build the playlist that fits you best right now.",
+        "cta": "Start the test"
+      },
+      "prev": {
+        "noData": "No data yet",
+        "noDataBody": "Take the test at least once to use this feature.",
+        "title": "Use previous results",
+        "updated": "Updated: {{date}}",
+        "cta": "Create a playlist from these results"
+      },
+      "liked": {
+        "notEnough": "Not enough data yet",
+        "notEnoughBody": "Like at least 14 tracks ({{liked}}/14) to use this feature.",
+        "title": "Favorites library",
+        "body": "Listen freely, or build an ISO-principle therapy path from the songs you've hearted.",
+        "progress": "Progress",
+        "tracks": "{{liked}}/14 tracks",
+        "freeListen": "Free Listening",
+        "buildTherapy": "Build Therapy"
+      },
+      "journey": "Your journey",
+      "filter": {
+        "all": "All",
+        "week": "By week",
+        "month": "By month"
+      },
+      "from": "From",
+      "to": "to",
+      "apply": "Filter",
+      "month": "Month",
+      "selectMonth": "-- Select month --",
+      "monthOption": "{{month}}/{{year}}",
+      "sessions_one": "{{count}} session",
+      "sessions_other": "{{count}} sessions",
+      "noSessions": "No sessions in this period.",
+      "badgeSevere": "Severe",
+      "badgeOk": "OK"
+    }
+  },
+  "consent": {
+    "title": "Agree to the terms",
+    "subtitle": "MindMelody - AI mental wellbeing support system",
+    "s1": {
+      "title": "1. Research purpose",
+      "body": "This system is the product of a scientific research project. We use music and AI (following the ISO Principle) to help students regulate their emotions. Your data helps us evaluate the effectiveness of the algorithm."
+    },
+    "s2": {
+      "title": "2. Data we collect",
+      "item1": "Psychological scores from the DASS-21 test.",
+      "item2": "Your interactions with music (skips, likes).",
+      "item3": "Your conversations with the AI assistant (encrypted)."
+    },
+    "s3": {
+      "title": "3. Security & Privacy commitment",
+      "body": "All of your personal data is encrypted. Your real identity is not used in scientific reports. We commit not to share this data with any third party outside the purpose of the research."
+    },
+    "s4": {
+      "title": "4. Safety rules (SOS)",
+      "body": "Note: MindMelody is an emotional support assistant, not a medical doctor or a licensed psychologist. If the system detects signs of a risk of self-harm, we will automatically activate emergency support mode and provide official medical contact information."
+    },
+    "agree": "I have read and understood the terms and agree to provide my data for research purposes.",
+    "start": "Begin your journey"
+  },
+  "footer": {
+    "description": "A personalized music recommendation system that supports emotion regulation based on psychological state and the ISO Principle.",
+    "explore": "Explore",
+    "about": "About MindMelody",
+    "medical": "Medical basis (ISO & DASS-21)",
+    "guide": "User guide",
+    "privacy": "Privacy & Data security",
+    "contact": "Contact"
+  },
+  "confirmDialog": {
+    "title": "Confirm",
+    "message": "Are you sure?",
+    "confirm": "OK",
+    "cancel": "Cancel"
+  },
+  "spaceError": {
+    "404": {
+      "title": "LOST IN SPACE",
+      "message": "This space coordinate doesn't exist. It looks like you've drifted too far from MindMelody's orbit.",
+      "action": "Back to home"
+    },
+    "500": {
+      "title": "SIGNAL LOST",
+      "message": "The control station (server) is refusing the connection, or the signal is noisy. Please try again later!",
+      "action": "Try again"
+    }
   }
 }

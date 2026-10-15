@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Heart, Shuffle, Repeat, Repeat1, PictureInPicture } from 'lucide-react';
 import { usePlayer } from './PlayerContext';
 import { useToast } from '../ToastContext';
+import { useTranslation } from 'react-i18next';
 
 
 const formatTime = (time) => {
@@ -24,6 +25,7 @@ const MediaController = () => {
     } = usePlayer();
 
     const toast = useToast();
+    const { t } = useTranslation();
 
 
     const [isIdle, setIsIdle] = useState(false);
@@ -48,7 +50,7 @@ const MediaController = () => {
         const rect = progressBarRef.current.getBoundingClientRect();
         const newTime = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * duration;
         playerTarget.seekTo(newTime);
-        toast.info("Để âm nhạc phát huy tối đa tác dụng trị liệu, bạn nên nghe tuần tự nhé.");
+        toast.info(t('media.seekTip'));
     };
 
     const handleVolumeChange = (e) => {
@@ -72,8 +74,8 @@ const MediaController = () => {
                 await videoElement.requestPictureInPicture();
             }
         } catch (error) {
-            console.error("Lỗi khi mở Mini Player:", error);
-            alert("Trình duyệt của bạn không hỗ trợ hoặc đang chặn tính năng Picture-in-Picture.");
+            console.error("Failed to open the mini player:", error);
+            alert(t('media.pipUnsupported'));
         }
     };
 
@@ -125,7 +127,7 @@ const MediaController = () => {
                                 initial={{ opacity: 0, x: 0 }} animate={{ opacity: 1, x: 20 }} exit={{ opacity: 0, x: 40 }}
                                 className="absolute left-full ml-4 text-rose-400 text-xs font-bold whitespace-nowrap pointer-events-none"
                             >
-                                Đã thích!
+                                {t('media.liked')}
                             </motion.span>
                         )}
                     </AnimatePresence>
@@ -142,7 +144,7 @@ const MediaController = () => {
                             whileTap={{ scale: 0.9 }}
                             onClick={() => setIsShuffle(p => !p)}
                             className={`transition-colors ${isShuffle ? 'text-[#41A67E]' : 'text-gray-500 hover:text-gray-300'}`}
-                            title="Shuffle"
+                            title={t('media.shuffle')}
                         >
                             <Shuffle className="w-4 h-4" />
                         </motion.button>
@@ -185,7 +187,7 @@ const MediaController = () => {
                             whileTap={{ scale: 0.9 }}
                             onClick={cycleRepeat}
                             className={`transition-colors ${repeatMode !== 'off' ? 'text-[#41A67E]' : 'text-gray-500 hover:text-gray-300'}`}
-                            title={repeatMode === 'off' ? 'Repeat off' : repeatMode === 'all' ? 'Repeat all' : 'Repeat one'}
+                            title={repeatMode === 'off' ? t('media.repeatOff') : repeatMode === 'all' ? t('media.repeatAll') : t('media.repeatOne')}
                         >
                             {repeatMode === 'one'
                                 ? <Repeat1 className="w-4 h-4" />
@@ -247,7 +249,7 @@ const MediaController = () => {
                     whileTap={{ scale: 0.9 }}
                     onClick={handleTogglePiP}
                     className="text-gray-400 hover:text-[#9ED3DC] transition-colors"
-                    title="Mở Mini Player"
+                    title={t('media.openMiniPlayer')}
                 >
                     <PictureInPicture className="w-4 h-4" />
                 </motion.button>

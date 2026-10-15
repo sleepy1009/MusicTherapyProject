@@ -4,6 +4,7 @@ import { MessageSquare, BookOpen, Music } from 'lucide-react';
 import { usePlayer } from './PlayerContext';
 import MoodOverlay from './MoodOverlay';
 import { useToast } from '../ToastContext';
+import { useTranslation } from 'react-i18next';
 
 const getHighResImage = (url) => {
     if (!url) return '/av0.png'; 
@@ -102,6 +103,7 @@ const CenterVisualizer = () => {
     } = usePlayer();
 
     const toast = useToast();
+    const { t } = useTranslation();
 
     const [clickCount, setClickCount] = useState(0);
     const [currentTip, setCurrentTip] = useState(0);
@@ -113,11 +115,8 @@ const CenterVisualizer = () => {
 
     const dominantColor = useDominantColor(currentSong.image || currentSong.cover);
 
-    const tips = [
-        "Hãy thử hít vào 4 giây, giữ 4 giây, thở ra 4 giây...",
-        "Nhắm mắt lại và tập trung vào nhịp điệu của âm nhạc...",
-        "Mọi căng thẳng rồi sẽ qua, bạn đang làm rất tốt.",
-    ];
+    // visualizer.tips is an array in the locale files
+    const tips = t('visualizer.tips', { returnObjects: true });
 
     useEffect(() => {
         const tipInterval = setInterval(() => setCurrentTip(prev => (prev + 1) % tips.length), 10000);
@@ -147,9 +146,9 @@ const CenterVisualizer = () => {
                 },
                 body: JSON.stringify(payload)
             });
-            console.log(`Đã lưu ${type} mood: ${moodValue}`);
+            console.log(`Saved ${type} mood: ${moodValue}`);
         } catch (error) {
-            console.error("Lỗi lưu mood:", error);
+            console.error("Failed to save mood:", error);
         }
     };
 

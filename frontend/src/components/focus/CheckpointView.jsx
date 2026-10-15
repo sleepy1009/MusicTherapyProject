@@ -2,17 +2,29 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Brain, RefreshCw, PlayCircle, Music, Activity, Calendar, ChevronRight, Shield, Phone } from 'lucide-react';
 import Mascot from '../Mascot';
+import { useTranslation } from 'react-i18next';
+import { normalizeLevel, isSevereLevel } from '../../utils/dassScoring';
 
 const SCORE_COLOR = (level) => {
-  switch (level) {
-    case 'Bình thường': return 'bg-[#41A67E]/10 text-[#66D0BC] border-[#41A67E]/30';
-    case 'Nhẹ':         return 'bg-yellow-400/10 text-yellow-300 border-yellow-400/25';
-    case 'Vừa':         return 'bg-orange-400/10 text-orange-300 border-orange-400/25';
-    case 'Nặng':        return 'bg-red-500/10 text-red-400 border-red-500/25';
-    case 'Rất nặng':    return 'bg-rose-600/10 text-rose-400 border-rose-600/25';
-    default:            return 'bg-white/5 text-gray-400 border-white/10';
+  // level may be a stored label in either language; normalizeLevel turns it into a key
+  switch (normalizeLevel(level)) {
+    case 'normal':   return 'bg-[#41A67E]/10 text-[#66D0BC] border-[#41A67E]/30';
+    case 'mild':     return 'bg-yellow-400/10 text-yellow-300 border-yellow-400/25';
+    case 'moderate': return 'bg-orange-400/10 text-orange-300 border-orange-400/25';
+    case 'severe':   return 'bg-red-500/10 text-red-400 border-red-500/25';
+    case 'extreme':  return 'bg-rose-600/10 text-rose-400 border-rose-600/25';
+    default:         return 'bg-white/5 text-gray-400 border-white/10';
   }
 };
+
+// vi keeps numeric day/month/year; en uses an unambiguous "14 Oct 2026"
+const formatDate = (value, lang) =>
+  new Date(value).toLocaleDateString(
+    lang === 'vi' ? 'vi-VN' : 'en-GB',
+    lang === 'vi'
+      ? { day: '2-digit', month: '2-digit', year: 'numeric' }
+      : { day: 'numeric', month: 'short', year: 'numeric' }
+  );
 
 const containerVariants = {
   hidden: {},
@@ -25,21 +37,25 @@ const itemVariants = {
 };
 
 const CheckpointView = ({ latestResult, latestPlaylist, onUseOldResult, onTakeNewTest, onPlayOldPlaylist }) => {
-  const date = new Date(latestResult.created_at).toLocaleDateString('vi-VN', {
-    day: '2-digit', month: '2-digit', year: 'numeric'
-  });
+  const { t, i18n } = useTranslation();
+  const date = formatDate(latestResult.created_at, i18n.language);
 
-  const isSevere = ['Nặng', 'Rất nặng'].includes(latestResult.stress_level) || 
-                   ['Nặng', 'Rất nặng'].includes(latestResult.anxiety_level) || 
-                   ['Nặng', 'Rất nặng'].includes(latestResult.depression_level);
+  const isSevere = isSevereLevel(latestResult.stress_level) ||
+                   isSevereLevel(latestResult.anxiety_level) ||
+                   isSevereLevel(latestResult.depression_level);
+
+  const levelText = (value) => {
+    const key = normalizeLevel(value);
+    return key ? t(`dass.levels.${key}`) : value;
+  };
 
   const actions = [
     {
       key: 'new-playlist',
       icon: <Brain className="w-5 h-5" />,
       iconBg: 'bg-[#41A67E]/15 text-[#66D0BC]',
-      title: 'Tạo Playlist từ kết quả này',
-      sub: `Dựa trên đánh giá ngày ${date}`,
+      title: t('checkpoint.createPlaylist'),
+      sub: t('checkpoint.createPlaylistSub', { date }),
       onClick: () => onUseOldResult('normal'),
       hoverBorder: 'hover:border-[#41A67E]/50',
       hoverBg: 'hover:bg-[#41A67E]/5',
@@ -48,8 +64,8 @@ const CheckpointView = ({ latestResult, latestPlaylist, onUseOldResult, onTakeNe
       key: 'old-playlist',
       icon: <PlayCircle className="w-5 h-5" />,
       iconBg: 'bg-[#1E90FF]/15 text-[#5aabff]',
-      title: 'Nghe lại playlist gần nhất',
-      sub: `${latestPlaylist.tracks?.length ?? '—'} bài hát • ${new Date(latestPlaylist.created_at).toLocaleDateString('vi-VN')}`,
+      title: t('checkpoint.replayPlaylist'),
+      sub: `${typeof latestPlaylist.tracks?.length === 'number' ? t('checkpoint.tracks', { count: latestPlaylist.tracks.length }) : '—'} • ${formatDate(latestPlaylist.created_at, i18n.language)}`,
       onClick: onPlayOldPlaylist,
       hoverBorder: 'hover:border-[#1E90FF]/40',
       hoverBg: 'hover:bg-[#1E90FF]/5',
@@ -58,8 +74,8 @@ const CheckpointView = ({ latestResult, latestPlaylist, onUseOldResult, onTakeNe
       key: 'new-test',
       icon: <RefreshCw className="w-5 h-5" />,
       iconBg: 'bg-white/6 text-gray-400',
-      title: 'Làm bài test mới hôm nay',
-      sub: 'Cập nhật tâm trạng hiện tại',
+      title: t('checkpoint.takeNewTest'),
+      sub: t('checkpoint.takeNewTestSub'),
       onClick: onTakeNewTest,
       hoverBorder: 'hover:border-white/20',
       hoverBg: 'hover:bg-white/5',
@@ -68,8 +84,8 @@ const CheckpointView = ({ latestResult, latestPlaylist, onUseOldResult, onTakeNe
       key: 'sos-space',
       icon: <Shield className="w-5 h-5" />,
       iconBg: 'bg-rose-500/20 text-rose-400',
-      title: 'Vào Không Gian An Toàn',
-      sub: 'Lắng nghe âm thanh xoa dịu tâm trí',
+      title: t('checkpoint.safeSpace'),
+      sub: t('checkpoint.safeSpaceSub'),
       onClick: () => onUseOldResult('sos'),
       hoverBorder: 'hover:border-rose-500/50',
       hoverBg: 'hover:bg-rose-500/10',
@@ -97,32 +113,32 @@ const CheckpointView = ({ latestResult, latestPlaylist, onUseOldResult, onTakeNe
 
         {/* Heading */}
         <motion.h2 variants={itemVariants} className="text-2xl font-bold text-main_text mb-2 text-center">
-          Chào mừng bạn quay lại
+          {t('checkpoint.welcomeBack')}
         </motion.h2>
         
         <motion.p variants={itemVariants} className="text-gray-300 text-sm text-center mb-5 leading-relaxed max-w-xl">
           {isSevere 
-            ? "Mình nhận thấy bạn đang trong thạng thái tâm lý nặng, hãy bấm nút SOS ở thanh điều hướng để nhận hotline nhé." 
-            : "Bạn muốn tiếp tục từ lần trước hay bắt đầu đánh giá lại hôm nay?"}
+            ? t('checkpoint.messageSevere') 
+            : t('checkpoint.messageNormal')}
         </motion.p>
 
         
 
         <motion.div variants={itemVariants} className="flex flex-wrap justify-center gap-2 mb-7">
           {[
-            { label: 'Căng thẳng', value: latestResult.stress_level },
-            { label: 'Lo âu',      value: latestResult.anxiety_level },
-            { label: 'Trầm cảm',   value: latestResult.depression_level },
+            { label: t('dass.categories.stress'),     value: latestResult.stress_level },
+            { label: t('dass.categories.anxiety'),    value: latestResult.anxiety_level },
+            { label: t('dass.categories.depression'), value: latestResult.depression_level },
           ].map(({ label, value }) => (
             <span
               key={label}
               className={`text-xs px-3 py-1.5 rounded-full border font-medium ${SCORE_COLOR(value)}`}
             >
-              {label}: {value}
+              {label}: {levelText(value)}
             </span>
           ))}
           <span className="text-[12px] text-gray-400 w-full text-center flex items-center justify-center gap-1 mt-1">
-            <Calendar className="w-3 h-3" /> Đánh giá ngày {date}
+            <Calendar className="w-3 h-3" /> {t('checkpoint.assessedOn', { date })}
           </span>
         </motion.div>
 

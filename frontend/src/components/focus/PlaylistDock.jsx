@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Music, RefreshCw, PlayCircle, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const PlaylistDock = ({ selectedCards, isFinished, onRestart, onStartListening }) => {
+  const { t } = useTranslation();
   const [isStarting, setIsStarting] = useState(false);
 
   const handleStart = () => {
@@ -28,7 +30,7 @@ const PlaylistDock = ({ selectedCards, isFinished, onRestart, onStartListening }
       <div className="flex items-center justify-between mb-4">
           <h3 className="text-white font-bold text-lg flex items-center gap-2">
             <Music className="w-5 h-5 text-[#9ED3DC]" />
-            {isFinished ? "Playlist Của Bạn" : "Đang Chọn..."}
+            {isFinished ? t('playlistDock.title') : t('playlistDock.selecting')}
           </h3>
           <span className="text-xs font-mono text-gray-400 bg-black/20 px-2 py-1 rounded">
             {selectedCards.length} / 7
@@ -42,7 +44,7 @@ const PlaylistDock = ({ selectedCards, isFinished, onRestart, onStartListening }
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                     className="h-32 border-2 border-dashed border-white/10 rounded-xl flex items-center justify-center text-gray-500 text-xs text-center px-4"
                 >
-                    Chọn thẻ bài để thêm vào đây
+                    {t('playlistDock.emptyHint')}
                 </motion.div>
             )}
 
@@ -85,7 +87,7 @@ const PlaylistDock = ({ selectedCards, isFinished, onRestart, onStartListening }
                 disabled={isStarting}
                 className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-medium transition flex items-center justify-center gap-2 disabled:opacity-50"
              >
-                <RefreshCw className="w-4 h-4" /> Tạo lại
+                <RefreshCw className="w-4 h-4" /> {t('playlistDock.regenerate')}
              </button>
              
              <button 
@@ -94,9 +96,9 @@ const PlaylistDock = ({ selectedCards, isFinished, onRestart, onStartListening }
                 className="flex-[2] py-3 bg-[#9ED3DC]/80 hover:bg-[#9ED3DC]/90 text-white rounded-xl text-sm font-bold shadow-sm shadow-[#9ED3DC]/30 transition flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
              >
                 {isStarting ? (
-                    <><Loader2 className="w-5 h-5 animate-spin text-black" /> <span className="text-black">Đang chuẩn bị...</span></>
+                    <><Loader2 className="w-5 h-5 animate-spin text-black" /> <span className="text-black">{t('playlistDock.preparing')}</span></>
                 ) : (
-                    <><PlayCircle className="w-5 h-5 text-black" /> <span className="text-black">Bắt đầu nghe</span></>
+                    <><PlayCircle className="w-5 h-5 text-black" /> <span className="text-black">{t('playlistDock.start')}</span></>
                 )}
              </button>
          </motion.div>
